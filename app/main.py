@@ -5,6 +5,7 @@ import os
 import requests
 import time
 import schedule
+import threading
 from croniter import croniter
 from datetime import datetime
 
@@ -20,7 +21,7 @@ cloud_files = set()
 
 
 # 初始化网盘文件列表
-def clean_cloud_files(api):
+def clean_cloud_files():
     global cloud_files
     cloud_files.clear()
 
@@ -223,11 +224,11 @@ def download_with_log(file_type, target_path, file_info, access_token):
     cloud_files.add(target_file)
     # 判断文件是否存在
     if os.path.exists(target_file):
-        print(f"{target_file} 已存在，跳过下载")
+        print(f"已存在，跳过下载: {target_file}")
     else:
         download_url = get_file_download_info(file_info["fileId"], access_token)
         download_file(download_url, target_file)
-        print(f"{target_file} 下载完成")
+        print(f"下载完成: {target_file}")
 
 
 def traverse_folders(parent_id=0, access_token=None, indent=0, parent_path=""):
@@ -254,6 +255,10 @@ def traverse_folders(parent_id=0, access_token=None, indent=0, parent_path=""):
     for item in file_list["data"]["fileList"]:
         # 如果是文件夹，递归遍历
         if item["type"] == 1:
+            # 记录文件夹
+            cloud_files.add(
+                os.path.join(config["targetDir"], parent_path, item["filename"])
+            )
             traverse_folders(
                 item["fileId"],
                 access_token,
@@ -274,8 +279,7 @@ def clean_local_files(local_dir):
         # 删除不在网盘列表中的文件
         for file in files:
             file_path = os.path.join(root, file)
-            rel_path = os.path.relpath(file_path, local_dir)
-            if rel_path not in cloud_files:
+            if file_path not in cloud_files:
                 os.remove(file_path)
                 print(f"删除文件: {file_path}")
 
@@ -306,29 +310,43 @@ def job():
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 定时任务执行完成")
 
 
+job_lock = threading.Lock()
+is_running = False
+
+
 def schedule_job():
-    job()
-    next_time = cron.get_next(datetime)
-    print(f"下次执行时间: {next_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    global is_running
+
+    with job_lock:
+        if is_running:
+            return
+        is_running = True
+    try:
+        job()
+    finally:
+        is_running = False
 
 
-print("123strm v0.1已启动...", flush=True)
+print("123strm v0.1 已启动...", flush=True)
 config = load_config()
 print("config加载成功")
-# 修改为非递归版本
+# 计算下次执行时间
 if "cron" in config:
     cron = croniter(config["cron"], datetime.now())
-    # 计算首次执行时间并安排
     next_time = cron.get_next(datetime)
     print(f"下次执行时间: {next_time.strftime('%Y-%m-%d %H:%M:%S')}")
-    delay = (next_time - datetime.now()).total_seconds()
-    schedule.every(delay).seconds.do(schedule_job)
+    # 直接使用cron表达式触发，不计算delay
+    schedule.every().day.at(next_time.strftime("%H:%M")).do(job)
 else:
     # 默认定时任务
     schedule.every().day.at("01:00").do(job)  # 每天凌晨1点执行
 try:
     while True:
         schedule.run_pending()
-        time.sleep(10)
+        print(f"当前时间: {datetime.now()}, 下次任务时间: {schedule.next_run()}")
+        time.sleep(30)
+except Exception as e:
+    print(f"定时任务异常: {str(e)}")
+
 except KeyboardInterrupt:
     print("程序退出")
