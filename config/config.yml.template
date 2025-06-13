@@ -23,3 +23,5 @@ image: True
 nfo: True
 # 视频文件最小限制，低于该大小的视频不处理，默认为100Mb
 minFileSize: 104857600
+# strm地址使用官方下载链接,默认为Flase
+use302Url: True

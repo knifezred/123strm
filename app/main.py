@@ -181,6 +181,8 @@ def process_file(file_info, config, access_token, parent_path):
             return
         # 生成strm文件
         video_url = os.path.join(config["pathPrefix"], parent_path, file_name)
+        if config.get("use302Url", False):
+            video_url = get_file_download_info(file_info["fileId"], access_token)
         if config.get("flatten_mode", False):
             # 平铺模式
             target_path = config["targetDir"]
