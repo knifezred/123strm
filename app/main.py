@@ -173,7 +173,7 @@ def process_file(file_info, config, access_token, parent_path):
     subtitle_extensions = [".srt", ".ass", ".ssa", ".sub"]
 
     file_name = file_info.get("filename", "")
-    file_extension = os.path.splitext(file_name)[1].lower()
+    file_base_name, file_extension = os.path.splitext(file_name)
     target_path = os.path.join(config["targetDir"], parent_path)
     if file_extension in video_extensions:
         # 只处理大于最小文件大小的文件
@@ -184,9 +184,9 @@ def process_file(file_info, config, access_token, parent_path):
         if config.get("flatten_mode", False):
             # 平铺模式
             target_path = config["targetDir"]
-            strm_path = os.path.join(target_path, file_name + ".strm")
+            strm_path = os.path.join(target_path, file_base_name + ".strm")
         else:
-            strm_path = os.path.join(target_path, file_name + ".strm")
+            strm_path = os.path.join(target_path, file_base_name + ".strm")
 
         if not os.path.exists(os.path.dirname(strm_path)):
             os.makedirs(os.path.dirname(strm_path), exist_ok=True)
@@ -344,7 +344,7 @@ try:
     while True:
         schedule.run_pending()
         print(f"当前时间: {datetime.now()}, 下次任务时间: {schedule.next_run()}")
-        time.sleep(30)
+        time.sleep(60)
 except Exception as e:
     print(f"定时任务异常: {str(e)}")
 
