@@ -8,6 +8,9 @@ import schedule
 import threading
 from croniter import croniter
 from datetime import datetime
+import aiohttp
+import aiofiles
+import asyncio
 
 # 添加时区设置
 import pytz
@@ -56,7 +59,6 @@ def get_access_token():
         pass
 
     # 获取新token
-    config = load_config()
     conn = http.client.HTTPSConnection("open-api.123pan.com")
     payload = json.dumps(
         {"clientID": config["clientID"], "clientSecret": config["clientSecret"]}
@@ -105,31 +107,46 @@ def get_file_download_info(file_id, access_token=None):
     return response["data"]["downloadUrl"]
 
 
-def download_file(url, save_path):
+async def download_file(url, save_path):
     """
-    根据指定的URL下载文件并保存到指定路径。
-
-    :param url: 文件的下载URL
-    :param save_path: 文件保存的本地路径
-    :return: 若下载成功返回True，否则返回False
+    异步下载文件
+    :param url: 文件URL
+    :param save_path: 保存路径
     """
-    try:
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
-        # 检查保存路径的文件夹是否存在，如果不存在则创建
-        if not os.path.exists(os.path.dirname(save_path)):
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        with open(save_path, "wb") as file:
-            for chunk in response.iter_content(chunk_size=8192):
-                file.write(chunk)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status == 200:
+                # 检查保存路径的文件夹是否存在，如果不存在则创建
+                if not os.path.exists(os.path.dirname(save_path)):
+                    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                async with aiofiles.open(save_path, "wb") as f:
+                    await f.write(await response.read())
+            else:
+                raise Exception(f"下载失败，状态码: {response.status}")
+    # """
+    # 根据指定的URL下载文件并保存到指定路径。
 
-        return True
-    except requests.RequestException as e:
-        print(f"下载文件时出错: {e}")
-        return False
+    # :param url: 文件的下载URL
+    # :param save_path: 文件保存的本地路径
+    # :return: 若下载成功返回True，否则返回False
+    # """
+    # try:
+    #     response = requests.get(url, stream=True)
+    #     response.raise_for_status()
+    #     # 检查保存路径的文件夹是否存在，如果不存在则创建
+    #     if not os.path.exists(os.path.dirname(save_path)):
+    #         os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    #     with open(save_path, "wb") as file:
+    #         for chunk in response.iter_content(chunk_size=8192):
+    #             file.write(chunk)
+
+    #     return True
+    # except requests.RequestException as e:
+    #     print(f"下载文件时出错: {e}")
+    #     return False
 
 
-def get_file_list(parent_file_id=0, limit=100, access_token=None):
+def get_file_list(parent_file_id=0, limit=100, lastFileId=None, access_token=None):
     """
     获取文件列表
     :param parent_file_id: 父文件夹ID，默认为0（根目录）
@@ -149,7 +166,8 @@ def get_file_list(parent_file_id=0, limit=100, access_token=None):
     }
     conn.request(
         "GET",
-        f"/api/v2/file/list?parentFileId={parent_file_id}&limit={limit}",
+        f"/api/v2/file/list?parentFileId={parent_file_id}&limit={limit}"
+        + (f"&lastFileId={lastFileId}" if lastFileId else ""),
         payload,
         headers,
     )
@@ -192,10 +210,12 @@ def process_file(file_info, config, access_token, parent_path):
 
         if not os.path.exists(os.path.dirname(strm_path)):
             os.makedirs(os.path.dirname(strm_path), exist_ok=True)
-        with open(strm_path, "w", encoding="utf-8") as f:
-            f.write(video_url)
+        # 检查文件是否存在，文件不存在或者覆写为True时写入文件
+        if not os.path.exists(strm_path) or config.get("overwrite", False):
+            with open(strm_path, "w", encoding="utf-8") as f:
+                f.write(video_url)
+            print("生成strm: " + strm_path)
         cloud_files.add(strm_path)
-        print("生成strm: " + strm_path)
     elif file_extension in image_extensions and should_download_file("image"):
         download_with_log("图片", target_path, file_info, access_token)
     elif file_extension in subtitle_extensions and should_download_file("subtitle"):
@@ -224,51 +244,68 @@ def download_with_log(file_type, target_path, file_info, access_token):
     target_file = os.path.join(target_path, file_info.get("filename", ""))
 
     cloud_files.add(target_file)
-    # 判断文件是否存在
-    if os.path.exists(target_file):
-        print(f"已存在，跳过下载: {target_file}")
-    else:
+    # 判断文件是否存在 TODO 重新下载
+    if not os.path.exists(target_file):
         download_url = get_file_download_info(file_info["fileId"], access_token)
-        download_file(download_url, target_file)
-        print(f"下载完成: {target_file}")
+        asyncio.run(download_file(download_url, target_file))
+        print(f"下载成功: {target_file}")
 
 
 def traverse_folders(parent_id=0, access_token=None, indent=0, parent_path=""):
     """
     递归遍历所有文件夹
+    优化点：
+    1. 预先加载配置避免重复检查
+    2. 减少重复获取access_token
+    3. 优化分页处理逻辑
+
     :param parent_id: 起始文件夹ID，默认为0（根目录）
     :param access_token: 访问令牌，如果未提供则自动获取
     :param indent: 缩进级别，用于格式化输出
     """
-    if not access_token:
-        access_token = get_access_token()
-
-    # 确保配置已加载
+    # 一次性加载配置和token
     if config is None:
         load_config()
+    if not access_token:
+        access_token = get_access_token()
     if parent_id == 0:
         parent_id = config["rootFolderId"]
 
-    # 获取当前目录下的文件和文件夹
-    file_list = get_file_list(
-        parent_file_id=parent_id, limit=100, access_token=access_token
-    )
+    # 处理当前页和所有分页数据
+    last_file_id = None
+    while True:
+        file_list = get_file_list(
+            parent_file_id=parent_id,
+            limit=100,
+            lastFileId=last_file_id,
+            access_token=access_token
+        )
+        process_file_list(file_list, parent_id, parent_path, indent, access_token)
 
-    for item in file_list["data"]["fileList"]:
-        # 如果是文件夹，递归遍历
-        if item["type"] == 1:
-            # 记录文件夹
-            cloud_files.add(
-                os.path.join(config["targetDir"], parent_path, item["filename"])
-            )
-            traverse_folders(
-                item["fileId"],
-                access_token,
-                indent + 1,
-                os.path.join(parent_path, item["filename"]),
-            )
-        # 如果是文件，进行处理
-        elif item["type"] == 0:
+        if file_list["data"]["lastFileId"] == -1:
+            break
+        last_file_id = file_list["data"]["lastFileId"]
+
+
+def process_file_list(file_list, parent_id, parent_path, indent, access_token):
+    """处理文件列表中的每个项目
+    优化点：
+    1. 预先计算target_dir路径避免重复计算
+    2. 使用更快的路径拼接方式
+    3. 减少不必要的变量创建
+    """
+    target_dir = config["targetDir"]
+    file_list_data = file_list["data"]["fileList"]
+
+    for item in file_list_data:
+        item_type = item["type"]
+        filename = item["filename"]
+        full_path = f"{parent_path}/{filename}" if parent_path else filename
+
+        if item_type == 1:  # 文件夹
+            cloud_files.add(os.path.join(target_dir, full_path))
+            traverse_folders(item["fileId"], access_token, indent + 1, full_path)
+        elif item_type == 0:  # 文件
             process_file(item, config, access_token, parent_path)
 
 
@@ -277,6 +314,7 @@ def clean_local_files(local_dir):
     清理本地目录中不在网盘文件列表中的文件和空文件夹
     :param local_dir: 要清理的本地目录路径
     """
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 开始清理空目录和失效文件")
     for root, dirs, files in os.walk(local_dir, topdown=False):
         # 删除不在网盘列表中的文件
         for file in files:
@@ -329,26 +367,20 @@ def schedule_job():
         is_running = False
 
 
-print("123strm v0.1 已启动...", flush=True)
+print("123strm v0.2 已启动...", flush=True)
 config = load_config()
-print("config加载成功")
+if config is not None:
+    print("config加载成功")
 # 计算下次执行时间
 if "cron" in config:
     cron = croniter(config["cron"], datetime.now())
     next_time = cron.get_next(datetime)
     print(f"下次执行时间: {next_time.strftime('%Y-%m-%d %H:%M:%S')}")
-    # 直接使用cron表达式触发，不计算delay
     schedule.every().day.at(next_time.strftime("%H:%M")).do(job)
 else:
     # 默认定时任务
     schedule.every().day.at("01:00").do(job)  # 每天凌晨1点执行
-try:
-    while True:
-        schedule.run_pending()
-        print(f"当前时间: {datetime.now()}, 下次任务时间: {schedule.next_run()}")
-        time.sleep(60)
-except Exception as e:
-    print(f"定时任务异常: {str(e)}")
 
-except KeyboardInterrupt:
-    print("程序退出")
+while True:
+    schedule.run_pending()
+    time.sleep(30)

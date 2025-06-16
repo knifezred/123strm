@@ -1,1 +1,5 @@
 /123strm.tar.gz
+config/config.yml
+/media/
+/venv/
+token_cache.json
