@@ -3,3 +3,4 @@ config/config.yml
 /media/
 /venv/
 token_cache.json
+/app/__pycache__/

@@ -11,6 +11,10 @@ from datetime import datetime
 import aiohttp
 import aiofiles
 import asyncio
+import uvicorn
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+
 
 # 添加时区设置
 import pytz
@@ -200,7 +204,7 @@ def process_file(file_info, config, access_token, parent_path):
         # 生成strm文件
         video_url = os.path.join(config["pathPrefix"], parent_path, file_name)
         if config.get("use302Url", False):
-            video_url = get_file_download_info(file_info["fileId"], access_token)
+            video_url = f"{config.get("proxy","http://0.0.0.0:1236")}/get_file_url/{file_info["fileId"]}"
         if config.get("flatten_mode", False):
             # 平铺模式
             target_path = config["targetDir"]
@@ -214,7 +218,7 @@ def process_file(file_info, config, access_token, parent_path):
         if not os.path.exists(strm_path) or config.get("overwrite", False):
             with open(strm_path, "w", encoding="utf-8") as f:
                 f.write(video_url)
-            print("生成strm: " + strm_path)
+            print(strm_path)
         cloud_files.add(strm_path)
     elif file_extension in image_extensions and should_download_file("image"):
         download_with_log("图片", target_path, file_info, access_token)
@@ -233,7 +237,7 @@ def should_download_file(file_type):
     return config.get(file_type, False) and config.get("flatten_mode", False) == False
 
 
-def download_with_log(file_type, target_path, file_info, access_token):
+async def download_with_log(file_type, target_path, file_info, access_token):
     """
     下载文件并打印日志
     :param file_type: 文件类型名称(用于日志)
@@ -247,7 +251,7 @@ def download_with_log(file_type, target_path, file_info, access_token):
     # 判断文件是否存在 TODO 重新下载
     if not os.path.exists(target_file):
         download_url = get_file_download_info(file_info["fileId"], access_token)
-        asyncio.run(download_file(download_url, target_file))
+        await download_file(download_url, target_file)
         print(f"下载成功: {target_file}")
 
 
@@ -278,7 +282,7 @@ def traverse_folders(parent_id=0, access_token=None, indent=0, parent_path=""):
             parent_file_id=parent_id,
             limit=100,
             lastFileId=last_file_id,
-            access_token=access_token
+            access_token=access_token,
         )
         process_file_list(file_list, parent_id, parent_path, indent, access_token)
 
@@ -381,6 +385,45 @@ else:
     # 默认定时任务
     schedule.every().day.at("01:00").do(job)  # 每天凌晨1点执行
 
-while True:
-    schedule.run_pending()
-    time.sleep(30)
+# 启动api
+app = FastAPI()
+
+
+@app.get("/")
+async def index():
+    return "123strm已启动"
+
+
+@app.get("/get_file_url/{file_id}")
+async def get_file_url(file_id: int):
+    """
+    获取文件下载链接
+    :param file_id: 文件ID
+    :return: 文件下载链接
+    """
+    download_url = get_file_download_info(file_id)
+    if download_url:
+        return download_url
+    else:
+        return "文件未找到"
+
+
+async def run_scheduler():
+    """
+    运行定时任务调度器
+    """
+    while True:
+        schedule.run_pending()
+        await asyncio.sleep(30)
+
+
+async def main():
+    """
+    主函数，同时启动API服务和定时任务
+    """
+    server = uvicorn.Server(config=uvicorn.Config(app=app, host="0.0.0.0", port=1236))
+    await asyncio.gather(server.serve(), run_scheduler())
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
