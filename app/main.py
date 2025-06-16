@@ -113,41 +113,24 @@ def get_file_download_info(file_id, access_token=None):
 
 async def download_file(url, save_path):
     """
-    异步下载文件
-    :param url: 文件URL
-    :param save_path: 保存路径
+    根据指定的URL下载文件并保存到指定路径。
+    :param url: 文件的下载URL
+    :param save_path: 文件保存的本地路径
+    :return: 若下载成功返回True，否则返回False
     """
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status == 200:
-                # 检查保存路径的文件夹是否存在，如果不存在则创建
-                if not os.path.exists(os.path.dirname(save_path)):
-                    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-                async with aiofiles.open(save_path, "wb") as f:
-                    await f.write(await response.read())
-            else:
-                raise Exception(f"下载失败，状态码: {response.status}")
-    # """
-    # 根据指定的URL下载文件并保存到指定路径。
-
-    # :param url: 文件的下载URL
-    # :param save_path: 文件保存的本地路径
-    # :return: 若下载成功返回True，否则返回False
-    # """
-    # try:
-    #     response = requests.get(url, stream=True)
-    #     response.raise_for_status()
-    #     # 检查保存路径的文件夹是否存在，如果不存在则创建
-    #     if not os.path.exists(os.path.dirname(save_path)):
-    #         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    #     with open(save_path, "wb") as file:
-    #         for chunk in response.iter_content(chunk_size=8192):
-    #             file.write(chunk)
-
-    #     return True
-    # except requests.RequestException as e:
-    #     print(f"下载文件时出错: {e}")
-    #     return False
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        # 检查保存路径的文件夹是否存在，如果不存在则创建
+        if not os.path.exists(os.path.dirname(save_path)):
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        with open(save_path, "wb") as file:
+            for chunk in response.iter_content(chunk_size=8192):
+                file.write(chunk)
+        return True
+    except requests.RequestException as e:
+        print(f"下载文件时出错: {e}")
+        return False
 
 
 def get_file_list(parent_file_id=0, limit=100, lastFileId=None, access_token=None):
@@ -237,7 +220,7 @@ def should_download_file(file_type):
     return config.get(file_type, False) and config.get("flatten_mode", False) == False
 
 
-async def download_with_log(file_type, target_path, file_info, access_token):
+def download_with_log(file_type, target_path, file_info, access_token):
     """
     下载文件并打印日志
     :param file_type: 文件类型名称(用于日志)
@@ -246,12 +229,11 @@ async def download_with_log(file_type, target_path, file_info, access_token):
     :param access_token: token
     """
     target_file = os.path.join(target_path, file_info.get("filename", ""))
-
     cloud_files.add(target_file)
     # 判断文件是否存在 TODO 重新下载
     if not os.path.exists(target_file):
         download_url = get_file_download_info(file_info["fileId"], access_token)
-        await download_file(download_url, target_file)
+        download_file(download_url, target_file)
         print(f"下载成功: {target_file}")
 
 
