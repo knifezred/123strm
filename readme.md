@@ -80,4 +80,8 @@ image: True
 nfo: True
 # 视频文件最小限制，低于该大小的视频不处理，默认为100Mb
 minFileSize: 104857600
+# strm地址使用官方下载链接
+use302Url: False
+# 覆盖模式，本地路径存在同名文件时是否重新生成/下载该文件，仅支持strm文件（可选，默认 False）
+overwrite: False
 ```
