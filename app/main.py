@@ -13,7 +13,7 @@ import aiofiles
 import asyncio
 import uvicorn
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import RedirectResponse
 
 
 # 添加时区设置
@@ -384,10 +384,9 @@ async def get_file_url(file_id: int):
     :return: 文件下载链接
     """
     download_url = get_file_download_info(file_id)
+    print(f"【302跳转服务】获取 123 下载地址成功: {download_url}")
     if download_url:
-        return download_url
-    else:
-        return "文件未找到"
+        return RedirectResponse(download_url, 302)
 
 
 async def run_scheduler():
