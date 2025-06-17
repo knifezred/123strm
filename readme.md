@@ -97,8 +97,6 @@ JobList:
     # 浏览器打开对应文件夹,如：https://www.123pan.com/?homeFilePath=111111,222222
     # homeFilePath后的最后一串数字就是该文件夹的ID
     rootFolderId: '0'
-    clientID: '123123'
-    clientSecret: '123123'
     # 输出路径
     targetDir: '/media/账号1'
   - id: '账号2'
