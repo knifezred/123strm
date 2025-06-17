@@ -15,6 +15,14 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi import Query
 from fastapi.responses import RedirectResponse
+from dataclasses import dataclass
+
+
+@dataclass
+class CacheItem:
+    file_id: int
+    url: str
+    expire_time: float
 
 
 # 添加时区设置
@@ -28,7 +36,34 @@ configFolder = "/config/"
 cloud_files = set()
 
 # 文件下载URL缓存 (存储格式: {file_id: {'url': url, 'expire_time': timestamp}})
-download_url_cache = {}
+download_url_cache = set()
+
+
+def add_cache_url(file_id, url, expire_time):
+    """
+    添加文件下载URL到缓存
+    :param file_id: 文件ID
+    :param url: 下载URL
+    :param expire_time: 过期时间
+    """
+    # 防止重复添加
+    temp_url_item = get_cache_url(file_id)
+    if temp_url_item is not None:
+        # 存在则更新
+        return
+    download_url_cache.add(CacheItem(file_id=file_id, url=url, expire_time=expire_time))
+
+
+def get_cache_url(file_id):
+    """
+    获取文件下载URL缓存
+    :param file_id: 文件ID
+    :return: url
+    """
+    for item in list(download_url_cache):
+        if item.file_id == file_id:
+            return item.url
+    return None
 
 
 # 读取配置文件
@@ -457,10 +492,9 @@ async def get_file_url(file_id: int, job_id: str = Query(..., min_length=1)):
         raise HTTPException(status_code=400, detail="文件ID必须为正整数")
     if not job_id:
         raise HTTPException(status_code=400, detail="任务ID不能为空")
-    global download_url_cache
     # 检查缓存
-    if file_id in download_url_cache:
-        cache_item = download_url_cache[file_id]
+    cache_item = get_cache_url(file_id)
+    if cache_item is not None:
         print(
             f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 从缓存获取302跳转URL: {cache_item['url']}"
         )
@@ -473,10 +507,11 @@ async def get_file_url(file_id: int, job_id: str = Query(..., min_length=1)):
             raise HTTPException(status_code=404, detail="文件未找到")
 
         # 存储URL和过期时间
-        download_url_cache[file_id] = {
-            "url": download_url,
-            "expire_time": time.time() + get_config_val("cacheExpireTime", job_id),
-        }
+        add_cache_url(
+            file_id,
+            download_url,
+            time.time() + get_config_val("cacheExpireTime", job_id),
+        )
         print(f"[{time.strftime('%m-%d %H:%M:%S')}] 302跳转成功: {download_url}")
         return RedirectResponse(download_url, 302)
     except Exception as e:
@@ -494,10 +529,10 @@ async def run_scheduler():
         job()
     while True:
         schedule.run_pending()
-        for file_id, cache_item in download_url_cache.items():
-            if time.time() > cache_item["expire_time"]:
-                del download_url_cache[file_id]
-        await asyncio.sleep(30)
+        for item in list(download_url_cache):
+            if time.time() > item.expire_time:
+                download_url_cache.remove(item)
+        await asyncio.sleep(60)
 
 
 async def main():
