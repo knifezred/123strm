@@ -13,6 +13,7 @@ import aiofiles
 import asyncio
 import uvicorn
 from fastapi import FastAPI
+from fastapi import Query
 from fastapi.responses import RedirectResponse
 
 
@@ -22,15 +23,12 @@ import pytz
 
 # 全局配置变量
 config = None
-
+configFolder = "/config/"
 # 全局网盘文件列表
 cloud_files = set()
 
-
-# 初始化网盘文件列表
-def clean_cloud_files():
-    global cloud_files
-    cloud_files.clear()
+# 文件下载URL缓存 (存储格式: {file_id: {'url': url, 'expire_time': timestamp}})
+download_url_cache = {}
 
 
 # 读取配置文件
@@ -40,20 +38,47 @@ def load_config():
     :return: 包含clientID和clientSecret的字典
     """
     global config
-    with open("/config/config.yml", "r", encoding="utf-8") as f:
+    config_path = os.path.join(configFolder, "config.yml")
+    with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
     return config
 
 
-def get_access_token():
+def get_config_val(key, job_id=None):
+    """
+    从config.yml读取配置信息
+    :param key: 配置项key
+    :param job_id: 任务ID，可选
+    :return: 配置项value
+    """
+    if job_id is not None:
+        for job in config["JobList"]:
+            if job is None:
+                print("job任务配置异常")
+
+            if job is not None and job["id"] == job_id:
+                if key not in job:
+                    return config[key]
+                else:
+                    return job[key]
+    if key not in config:
+        raise ValueError(f"配置项 {key} 不存在")
+    return config[key]
+
+
+def get_access_token(job_id):
     """
     获取123云盘API访问令牌
     优先使用本地缓存，根据过期时间判断是否需要重新获取
     :return: accessToken字符串
     """
+    clientId = get_config_val("clientID", job_id)
+    # 根据clientID生成缓存文件名
+    cache_file = os.path.join(configFolder, f"token_cache_{clientId}.json")
+
     # 尝试从缓存文件读取token信息
     try:
-        with open("token_cache.json", "r") as f:
+        with open(cache_file, "r") as f:
             cache = json.load(f)
             if datetime.fromisoformat(cache["expiredAt"]).replace(
                 tzinfo=None
@@ -62,11 +87,10 @@ def get_access_token():
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
         pass
 
+    clientSecret = get_config_val("clientSecret", job_id)
     # 获取新token
     conn = http.client.HTTPSConnection("open-api.123pan.com")
-    payload = json.dumps(
-        {"clientID": config["clientID"], "clientSecret": config["clientSecret"]}
-    )
+    payload = json.dumps({"clientID": clientId, "clientSecret": clientSecret})
     headers = {"Platform": "open_platform", "Content-Type": "application/json"}
     conn.request("POST", "/api/v1/access_token", payload, headers)
     res = conn.getresponse()
@@ -74,7 +98,7 @@ def get_access_token():
     response = json.loads(data.decode("utf-8"))
 
     # 保存token到缓存文件
-    with open("token_cache.json", "w") as f:
+    with open(cache_file, "w") as f:
         json.dump(
             {
                 "accessToken": response["data"]["accessToken"],
@@ -86,7 +110,7 @@ def get_access_token():
     return response["data"]["accessToken"]
 
 
-def get_file_download_info(file_id, access_token=None):
+def get_file_download_info(file_id, job_id, access_token=None):
     """
     获取文件下载信息
     :param file_id: 文件ID
@@ -95,7 +119,7 @@ def get_file_download_info(file_id, access_token=None):
     """
     conn = http.client.HTTPSConnection("open-api.123pan.com")
     if not access_token:
-        access_token = get_access_token()
+        access_token = get_access_token(job_id)
     payload = ""
     headers = {
         "Content-Type": "application/json",
@@ -111,29 +135,68 @@ def get_file_download_info(file_id, access_token=None):
     return response["data"]["downloadUrl"]
 
 
-async def download_file(url, save_path):
+def should_download_file(file_type, job_id):
+    """
+    判断是否应该下载指定类型的文件
+    :param file_type: 文件类型配置名
+    :return: bool 是否下载
+    """
+    return (
+        get_config_val(file_type, job_id)
+        and get_config_val("flatten_mode", job_id) == False
+    )
+
+
+def download_with_log(file_type, target_path, file_info, job_id, access_token):
+    """
+    下载文件并打印日志
+    :param file_type: 文件类型名称(用于日志)
+    :param target_path: 生成路径
+    :param file_info: 文件详情
+    :param access_token: token
+    """
+    target_file = os.path.join(target_path, file_info.get("filename", ""))
+    cloud_files.add(target_file)
+    # 判断文件是否存在
+    if not os.path.exists(target_file):
+        download_url = get_file_download_info(file_info["fileId"], job_id, access_token)
+        download_file(download_url, target_file)
+        print(f"下载成功: {target_file}")
+
+
+def download_file(url, save_path):
     """
     根据指定的URL下载文件并保存到指定路径。
     :param url: 文件的下载URL
     :param save_path: 文件保存的本地路径
     :return: 若下载成功返回True，否则返回False
     """
-    try:
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
-        # 检查保存路径的文件夹是否存在，如果不存在则创建
-        if not os.path.exists(os.path.dirname(save_path)):
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        with open(save_path, "wb") as file:
-            for chunk in response.iter_content(chunk_size=8192):
-                file.write(chunk)
-        return True
-    except requests.RequestException as e:
-        print(f"下载文件时出错: {e}")
-        return False
+    max_retries = 3
+    retry_count = 0
+
+    while retry_count < max_retries:
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            # 检查保存路径的文件夹是否存在，如果不存在则创建
+            if not os.path.exists(os.path.dirname(save_path)):
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            with open(save_path, "wb") as file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    file.write(chunk)
+            return True
+        except requests.RequestException as e:
+            retry_count += 1
+            if retry_count == max_retries:
+                print(f"下载文件失败，已达最大重试次数{max_retries}: {e}")
+                return False
+            print(f"下载文件出错(第{retry_count}次重试): {e}")
+            time.sleep(1)  # 重试前等待1秒
 
 
-def get_file_list(parent_file_id=0, limit=100, lastFileId=None, access_token=None):
+def get_file_list(
+    job_id, parent_file_id=0, limit=100, lastFileId=None, access_token=None
+):
     """
     获取文件列表
     :param parent_file_id: 父文件夹ID，默认为0（根目录）
@@ -142,7 +205,7 @@ def get_file_list(parent_file_id=0, limit=100, lastFileId=None, access_token=Non
     :return: 文件列表JSON数据
     """
     if not access_token:
-        access_token = get_access_token()
+        access_token = get_access_token(job_id)
 
     conn = http.client.HTTPSConnection("open-api.123pan.com")
     payload = ""
@@ -163,81 +226,24 @@ def get_file_list(parent_file_id=0, limit=100, lastFileId=None, access_token=Non
     return json.loads(data.decode("utf-8"))
 
 
-def process_file(file_info, config, access_token, parent_path):
-    """
-    处理单个文件
-    :param file_info: 文件信息字典
-    :param config: 配置信息
-    :param access_token: 访问令牌
-    """
-    # 视频文件扩展名
-    video_extensions = [".mp4", ".mkv", ".avi", ".mov", ".flv", ".wmv", ".m2ts"]
-    # 图片文件扩展名
-    image_extensions = [".jpg", ".jpeg", ".png"]
-    # 字幕文件扩展名
-    subtitle_extensions = [".srt", ".ass", ".ssa", ".sub"]
-
-    file_name = file_info.get("filename", "")
-    file_base_name, file_extension = os.path.splitext(file_name)
-    target_path = os.path.join(config["targetDir"], parent_path)
-    if file_extension in video_extensions:
-        # 只处理大于最小文件大小的文件
-        if int(file_info["size"]) <= int(config["minFileSize"]):
-            return
-        # 生成strm文件
-        video_url = os.path.join(config["pathPrefix"], parent_path, file_name)
-        if config.get("use302Url", False):
-            video_url = f"{config.get("proxy","http://0.0.0.0:1236")}/get_file_url/{file_info["fileId"]}"
-        if config.get("flatten_mode", False):
-            # 平铺模式
-            target_path = config["targetDir"]
-            strm_path = os.path.join(target_path, file_base_name + ".strm")
-        else:
-            strm_path = os.path.join(target_path, file_base_name + ".strm")
-
-        if not os.path.exists(os.path.dirname(strm_path)):
-            os.makedirs(os.path.dirname(strm_path), exist_ok=True)
-        # 检查文件是否存在，文件不存在或者覆写为True时写入文件
-        if not os.path.exists(strm_path) or config.get("overwrite", False):
-            with open(strm_path, "w", encoding="utf-8") as f:
-                f.write(video_url)
-            print(strm_path)
-        cloud_files.add(strm_path)
-    elif file_extension in image_extensions and should_download_file("image"):
-        download_with_log("图片", target_path, file_info, access_token)
-    elif file_extension in subtitle_extensions and should_download_file("subtitle"):
-        download_with_log("字幕", target_path, file_info, access_token)
-    elif file_extension == ".nfo" and should_download_file("nfo"):
-        download_with_log("nfo", target_path, file_info, access_token)
+def get_file_info(fileId, job_id, access_token=None):
+    if not access_token:
+        access_token = get_access_token(job_id)
+    conn = http.client.HTTPSConnection("open-api.123pan.com")
+    payload = ""
+    headers = {
+        "Content-Type": "application/json",
+        "Platform": "open_platform",
+        "Authorization": f"Bearer {access_token}",
+    }
+    conn.request("GET", f"/api/v1/file/detail?fileID={fileId}", payload, headers)
+    res = conn.getresponse()
+    data = res.read()
+    response = json.loads(data.decode("utf-8"))
+    return response["data"]["filename"]
 
 
-def should_download_file(file_type):
-    """
-    判断是否应该下载指定类型的文件
-    :param file_type: 文件类型配置名
-    :return: bool 是否下载
-    """
-    return config.get(file_type, False) and config.get("flatten_mode", False) == False
-
-
-def download_with_log(file_type, target_path, file_info, access_token):
-    """
-    下载文件并打印日志
-    :param file_type: 文件类型名称(用于日志)
-    :param target_path: 生成路径
-    :param file_info: 文件详情
-    :param access_token: token
-    """
-    target_file = os.path.join(target_path, file_info.get("filename", ""))
-    cloud_files.add(target_file)
-    # 判断文件是否存在 TODO 重新下载
-    if not os.path.exists(target_file):
-        download_url = get_file_download_info(file_info["fileId"], access_token)
-        download_file(download_url, target_file)
-        print(f"下载成功: {target_file}")
-
-
-def traverse_folders(parent_id=0, access_token=None, indent=0, parent_path=""):
+def traverse_folders(job_id, parent_id=0, access_token=None, indent=0, parent_path=""):
     """
     递归遍历所有文件夹
     优化点：
@@ -253,34 +259,43 @@ def traverse_folders(parent_id=0, access_token=None, indent=0, parent_path=""):
     if config is None:
         load_config()
     if not access_token:
-        access_token = get_access_token()
+        access_token = get_access_token(job_id)
     if parent_id == 0:
-        parent_id = config["rootFolderId"]
-
+        parent_id = get_config_val("rootFolderId", job_id=job_id)
+    # 兼容同账号多文件夹配置
+    if "," in str(parent_id):
+        parent_id_list = parent_id.split(",")
+        for parent_id in parent_id_list:
+            # 多文件夹保留当前文件夹目录
+            parent_path = get_file_info(parent_id, job_id, access_token)
+            traverse_folders(job_id, parent_id, access_token, indent, parent_path)
     # 处理当前页和所有分页数据
     last_file_id = None
     while True:
         file_list = get_file_list(
+            job_id,
             parent_file_id=parent_id,
             limit=100,
             lastFileId=last_file_id,
             access_token=access_token,
         )
-        process_file_list(file_list, parent_id, parent_path, indent, access_token)
+        process_file_list(
+            job_id, file_list, parent_id, parent_path, indent, access_token
+        )
 
         if file_list["data"]["lastFileId"] == -1:
             break
         last_file_id = file_list["data"]["lastFileId"]
 
 
-def process_file_list(file_list, parent_id, parent_path, indent, access_token):
+def process_file_list(job_id, file_list, parent_id, parent_path, indent, access_token):
     """处理文件列表中的每个项目
     优化点：
     1. 预先计算target_dir路径避免重复计算
     2. 使用更快的路径拼接方式
     3. 减少不必要的变量创建
     """
-    target_dir = config["targetDir"]
+    target_dir = get_config_val("targetDir", job_id=job_id)
     file_list_data = file_list["data"]["fileList"]
 
     for item in file_list_data:
@@ -290,9 +305,68 @@ def process_file_list(file_list, parent_id, parent_path, indent, access_token):
 
         if item_type == 1:  # 文件夹
             cloud_files.add(os.path.join(target_dir, full_path))
-            traverse_folders(item["fileId"], access_token, indent + 1, full_path)
+            traverse_folders(
+                job_id, item["fileId"], access_token, indent + 1, full_path
+            )
         elif item_type == 0:  # 文件
-            process_file(item, config, access_token, parent_path)
+            process_file(item, access_token, parent_path, job_id)
+
+
+def process_file(file_info, access_token, parent_path, job_id):
+    """
+    处理单个文件
+    :param file_info: 文件信息字典
+    :param access_token: 访问令牌
+    """
+    # 视频文件扩展名
+    video_extensions = [".mp4", ".mkv", ".avi", ".mov", ".flv", ".wmv", ".m2ts"]
+    # 图片文件扩展名
+    image_extensions = [".jpg", ".jpeg", ".png"]
+    # 字幕文件扩展名
+    subtitle_extensions = [".srt", ".ass", ".ssa", ".sub"]
+
+    file_name = file_info.get("filename", "")
+    file_base_name, file_extension = os.path.splitext(file_name)
+    target_path = os.path.join(get_config_val("targetDir", job_id), parent_path)
+    if file_extension in video_extensions:
+        # 只处理大于最小文件大小的文件
+        if int(file_info["size"]) <= int(get_config_val("minFileSize", job_id)):
+            return
+        # 生成strm文件
+        video_url = os.path.join(
+            get_config_val("pathPrefix", job_id), parent_path, file_name
+        )
+        if get_config_val("use302Url", job_id):
+            video_url = f"{get_config_val("proxy",job_id)}/get_file_url/{file_info["fileId"]}?job_id={job_id}"
+        if get_config_val("flatten_mode", job_id):
+            # 平铺模式
+            target_path = get_config_val("targetDir", job_id)
+            strm_path = os.path.join(target_path, file_base_name + ".strm")
+        else:
+            strm_path = os.path.join(target_path, file_base_name + ".strm")
+
+        if not os.path.exists(os.path.dirname(strm_path)):
+            os.makedirs(os.path.dirname(strm_path), exist_ok=True)
+        # 检查文件是否存在，文件不存在或者覆写为True时写入文件
+        if not os.path.exists(strm_path) or get_config_val("overwrite", job_id):
+            with open(strm_path, "w", encoding="utf-8") as f:
+                f.write(video_url)
+            print(strm_path)
+        cloud_files.add(strm_path)
+    elif file_extension in image_extensions and should_download_file("image", job_id):
+        download_with_log("图片", target_path, file_info, job_id, access_token)
+    elif file_extension in subtitle_extensions and should_download_file(
+        "subtitle", job_id
+    ):
+        download_with_log("字幕", target_path, file_info, job_id, access_token)
+    elif file_extension == ".nfo" and should_download_file("nfo", job_id):
+        download_with_log("nfo", target_path, file_info, job_id, access_token)
+
+
+# 初始化网盘文件列表
+def clean_cloud_files():
+    global cloud_files
+    cloud_files.clear()
 
 
 def clean_local_files(local_dir):
@@ -325,38 +399,30 @@ def job():
     now = datetime.now(pytz.timezone("Asia/Shanghai"))
     print(f"任务执行时间: {now.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 开始执行定时任务")
-    # 加载config配置
+    # 加载最新config配置
     config = load_config()
-    access_token = get_access_token()
-    # 清空云盘文件列表
-    clean_cloud_files()
-    traverse_folders(access_token=access_token)
-    # 遍历完成后清理过期文件和空文件夹
-    clean_local_files(config["targetDir"])
+    # 检查配置中是否存在 JobList
+    if "JobList" in config:
+        # 遍历 JobList 中的每个任务
+        for job in config["JobList"]:
+            job_id = job["id"]
+            print(f"正在处理任务: {job_id}")
+            # 清空云盘文件列表
+            clean_cloud_files()
+            # 这里可以根据具体需求添加对每个任务的处理逻辑
+            traverse_folders(job_id)
+            # 遍历完成后清理过期文件和空文件夹
+            clean_local_files(get_config_val("targetDir", job_id=job_id))
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 定时任务执行完成")
 
 
-job_lock = threading.Lock()
-is_running = False
-
-
-def schedule_job():
-    global is_running
-
-    with job_lock:
-        if is_running:
-            return
-        is_running = True
-    try:
-        job()
-    finally:
-        is_running = False
-
-
-print("123strm v0.2 已启动...", flush=True)
+print("123strm v1.0 已启动...", flush=True)
 config = load_config()
 if config is not None:
     print("config加载成功")
+else:
+    # 抛出一个自定义异常，这里以 ValueError 为例
+    raise ValueError("config加载失败，程序执行异常")
 # 计算下次执行时间
 if "cron" in config:
     cron = croniter(config["cron"], datetime.now())
@@ -366,6 +432,7 @@ if "cron" in config:
 else:
     # 默认定时任务
     schedule.every().day.at("01:00").do(job)  # 每天凌晨1点执行
+
 
 # 启动api
 app = FastAPI()
@@ -377,24 +444,59 @@ async def index():
 
 
 @app.get("/get_file_url/{file_id}")
-async def get_file_url(file_id: int):
+async def get_file_url(file_id: int, job_id: str = Query(..., min_length=1)):
     """
     获取文件下载链接
-    :param file_id: 文件ID
-    :return: 文件下载链接
+    :param file_id: 文件ID (必须为正整数)
+    :param job_id: 任务ID (必须为非空字符串)
+    :return: 文件下载链接或错误信息
+    :raises HTTPException 400: 当参数验证失败时
     """
-    download_url = get_file_download_info(file_id)
-    print(f"【302跳转服务】获取 123 下载地址成功: {download_url}")
-    if download_url:
+    # 参数验证
+    if file_id <= 0:
+        raise HTTPException(status_code=400, detail="文件ID必须为正整数")
+    if not job_id:
+        raise HTTPException(status_code=400, detail="任务ID不能为空")
+    global download_url_cache
+    # 检查缓存
+    if file_id in download_url_cache:
+        cache_item = download_url_cache[file_id]
+        print(
+            f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 从缓存获取302跳转URL: {cache_item['url']}"
+        )
+        return RedirectResponse(cache_item["url"], 302)
+
+    # 获取下载URL并存入缓存
+    try:
+        download_url = get_file_download_info(file_id, job_id)
+        if not download_url:
+            raise HTTPException(status_code=404, detail="文件未找到")
+
+        # 存储URL和过期时间
+        download_url_cache[file_id] = {
+            "url": download_url,
+            "expire_time": time.time() + get_config_val("cacheExpireTime", job_id),
+        }
+        print(f"[{time.strftime('%m-%d %H:%M:%S')}] 302跳转成功: {download_url}")
         return RedirectResponse(download_url, 302)
+    except Exception as e:
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 获取文件下载链接失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="获取文件下载链接失败")
+    raise HTTPException(status_code=404, detail="文件未找到")
 
 
 async def run_scheduler():
     """
     运行定时任务调度器
     """
+    # 开启即运行
+    if config.get("runningOnStart", False):
+        job()
     while True:
         schedule.run_pending()
+        for file_id, cache_item in download_url_cache.items():
+            if time.time() > cache_item["expire_time"]:
+                del download_url_cache[file_id]
         await asyncio.sleep(30)
 
 

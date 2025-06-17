@@ -1,6 +1,5 @@
 /123strm.tar.gz
-config/config.yml
+/config/
 /media/
 /venv/
-token_cache.json
 /app/__pycache__/
