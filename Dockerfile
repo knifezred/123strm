@@ -22,6 +22,8 @@ COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt && \
     rm requirements.txt
 
-COPY --from=builder /builder/app /app
-
-ENTRYPOINT ["python", "-u", "/app/main.py"]
+COPY --from=builder /builder/app /app/app
+WORKDIR /app
+ENV PYTHONPATH=/app
+ENTRYPOINT ["python", "-u", "-m", "app.main"]
+# ENTRYPOINT ["python", "-u", "/app/main.py"]
