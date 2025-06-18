@@ -24,7 +24,7 @@ class Utils:
     """
 
     config = None
-
+    # 开发时使用 config/ 相对定位
     config_folder = "/config/"
 
     @classmethod

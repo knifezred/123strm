@@ -11,6 +11,7 @@ import requests
 import time
 import schedule
 import threading
+import urllib.parse
 from croniter import croniter
 from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException
@@ -297,8 +298,8 @@ async def index():
     return "123strm已启动"
 
 
-@local302Api.get("/get_file_url/{file_id}")
-async def get_file_url(file_id: int, job_id: str = Query(..., min_length=1)):
+@local302Api.get("/get_file_url/{file_id}/{job_id}")
+async def get_file_url(file_id: int, job_id: str):
     """
     获取文件下载链接
     :param file_id: 文件ID (必须为正整数)
@@ -321,6 +322,7 @@ async def get_file_url(file_id: int, job_id: str = Query(..., min_length=1)):
 
     # 获取下载URL并存入缓存
     try:
+        job_id = urllib.parse.unquote(job_id)
         download_url = get_file_download_info(file_id, job_id)
         if not download_url:
             print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 未找到文件: {file_id}")

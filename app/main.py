@@ -6,6 +6,7 @@ import requests
 import time
 import schedule
 import threading
+import urllib.parse
 from croniter import croniter
 from datetime import datetime
 import aiohttp
@@ -138,8 +139,8 @@ def process_file(file_info, parent_path, job_id):
             file_name,
         )
         if my_utils.get_config_val("use302Url", job_id, default_val=True):
-
-            video_url = f"{my_utils.get_config_val("proxy",job_id,default_val="http://127.0.0.1:1236")}/get_file_url/{file_info["fileId"]}?job_id={job_id}"
+            job_id_encode = urllib.parse.quote(job_id)
+            video_url = f"{my_utils.get_config_val("proxy",job_id,default_val="http://127.0.0.1:1236")}/get_file_url/{file_info["fileId"]}/{job_id_encode}"
         if my_utils.get_config_val("flatten_mode", job_id, default_val=False):
             # 平铺模式
             target_path = my_utils.get_config_val("targetDir", job_id)
