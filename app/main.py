@@ -250,7 +250,7 @@ async def main():
     """
     主函数，同时启动API服务和定时任务
     """
-    print("123strm v1.0 已启动...", flush=True)
+    print("123strm v1.5 已启动...", flush=True)
     my_utils.load_config()
     if my_utils.config is not None:
         print("config加载成功")
