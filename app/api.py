@@ -18,12 +18,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi import Query
 from fastapi.responses import RedirectResponse
 
-from app.utils import Utils
+from app.utils import get_config_val, clean_local_access_token, config_folder
 
 # 添加时区设置
 import pytz
 
-my_utils = Utils()
+from app import logger
 
 
 class ConnectionPool:
@@ -90,7 +90,15 @@ class ConnectionPool:
 api_pool = ConnectionPool("open-api.123pan.com")
 
 
-def http_get_request(job_id, payload="", path=""):
+def http_123_request(job_id, payload="", path="", method="GET"):
+    """
+    123云盘API请求封装
+    :param job_id: 任务ID
+    :param payload: 请求体数据
+    :param path: 请求路径
+    :param method: HTTP方法
+    :return: 响应数据
+    """
     conn = None
     try:
         access_token = get_access_token(job_id)
@@ -104,7 +112,7 @@ def http_get_request(job_id, payload="", path=""):
             raise ValueError("Invalid connection type returned from pool")
 
         conn.request(
-            "GET",
+            method,
             path,
             payload,
             headers,
@@ -113,7 +121,7 @@ def http_get_request(job_id, payload="", path=""):
         data = res.read()
         response = json.loads(data.decode("utf-8"))
         if response["code"] != 0:
-            print(job_id + " " + path + "\n" + response["message"])
+            logger.warning(job_id + " " + path + "\n" + response["message"])
             raise HTTPException(
                 status_code=response["code"], detail=response["message"]
             )
@@ -150,9 +158,9 @@ def get_access_token(job_id):
     优先使用本地缓存，根据过期时间判断是否需要重新获取（提前一天清除缓存并返回最新token）
     :return: accessToken字符串
     """
-    clientId = my_utils.get_config_val("clientID", job_id=job_id)
+    clientId = get_config_val("clientID", job_id=job_id)
     # 根据clientID生成缓存文件名
-    cache_file = os.path.join(my_utils.config_folder, f"token_cache_{clientId}.json")
+    cache_file = os.path.join(config_folder, f"token_cache_{clientId}.json")
     # 尝试从缓存文件读取token信息
     try:
         current_time = datetime.now().replace(tzinfo=None)
@@ -168,7 +176,7 @@ def get_access_token(job_id):
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
         pass
     # 获取新token
-    clientSecret = my_utils.get_config_val("clientSecret", job_id)
+    clientSecret = get_config_val("clientSecret", job_id)
     token_response = auth_access_token(clientId, clientSecret)
     # 保存token到缓存文件
     with open(cache_file, "w") as f:
@@ -188,15 +196,15 @@ def heartbeat(job_id):
     :param job_id: 任务ID
     """
     try:
-        jsonData = http_get_request(
+        jsonData = http_123_request(
             job_id, path="/api/v2/file/list?parentFileId=0&limit=1"
         )
         if jsonData["code"] != 0:
-            print("心跳检测失败，清除缓存文件")
-            my_utils.clean_local_access_token(job_id)
+            logger.info(f"心跳检测失败{jsonData["code"]}:{jsonData["message"]}")
+            clean_local_access_token(job_id)
     except:
-        print("心跳检测异常，清除缓存文件")
-        my_utils.clean_local_access_token(job_id)
+        logger.info("心跳检测异常，清除缓存文件")
+        clean_local_access_token(job_id)
 
 
 def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, max_retries=0):
@@ -209,7 +217,7 @@ def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, max_retr
     """
     try:
         start_time = time.time()
-        response = http_get_request(
+        response = http_123_request(
             job_id,
             path=f"/api/v2/file/list?parentFileId={parent_file_id}&limit={limit}"
             + (f"&lastFileId={lastFileId}" if lastFileId else ""),
@@ -222,7 +230,7 @@ def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, max_retr
         if max_retries < 3:
             time.sleep(5)
             max_retries = max_retries + 1
-            print(f"获取文件列表失败: {parent_file_id}, 重试{max_retries}...")
+            logger.info(f"获取文件列表失败: {parent_file_id}, 重试{max_retries}...")
             return get_file_list(
                 job_id,
                 parent_file_id=parent_file_id,
@@ -242,13 +250,13 @@ def get_file_info(fileId, job_id, max_retries=0):
     """
 
     try:
-        response = http_get_request(job_id, path=f"/api/v1/file/detail?fileID={fileId}")
+        response = http_123_request(job_id, path=f"/api/v1/file/detail?fileID={fileId}")
         return response["data"]["filename"]
     except:
         if max_retries < 3:
             time.sleep(5)
             max_retries = max_retries + 1
-            print(f"获取文件信息失败: {fileId}, 重试{max_retries}...")
+            logger.info(f"获取文件信息失败: {fileId}, 重试{max_retries}...")
             return get_file_info(fileId, job_id, max_retries)
         else:
             raise Exception(f"获取文件信息失败: {fileId}")
@@ -262,7 +270,7 @@ def get_file_download_info(file_id, job_id, max_retries=0):
     :return: 下载信息JSON数据
     """
     try:
-        response = http_get_request(
+        response = http_123_request(
             job_id, path=f"/api/v1/file/download_info?fileId={file_id}"
         )
         return response["data"]["downloadUrl"]
@@ -270,10 +278,32 @@ def get_file_download_info(file_id, job_id, max_retries=0):
         if max_retries < 3:
             time.sleep(5)
             max_retries = max_retries + 1
-            print(f"获取文件下载信息失败: {file_id}, 重试{max_retries}...")
+            logger.info(f"获取文件下载信息失败: {file_id}, 重试{max_retries}...")
             return get_file_download_info(file_id, job_id, max_retries)
         else:
-            print(f"获取文件下载信息失败: {file_id}")
+            logger.info(f"获取文件下载信息失败: {file_id}")
+
+
+def delete_file_by_id(file_id, job_id):
+    """
+    删除文件
+    :param file_id: 文件ID
+    :param job_id: 任务ID
+    :return: 删除结果JSON数据
+    """
+    # qps设置为1
+    time.sleep(1)
+    try:
+        payload = json.dumps({"fileIDs": [file_id]})
+        response = http_123_request(
+            job_id, payload=payload, path=f"/api/v1/file/trash", method="POST"
+        )
+        if response["code"] == 0:
+            logger.info(f"删除云盘文件成功: {job_id} - {file_id}")
+    except:
+        logger.info(
+            f"删除云盘文件失败: {job_id} - {file_id} -{response["code"]}: {response["message"]}"
+        )
 
 
 ###############API#############
@@ -315,7 +345,7 @@ async def get_file_url(file_id: int, job_id: str):
     # 检查缓存
     cache_item = download_url_cache.get(file_id)
     if cache_item is not None:
-        print(
+        logger.info(
             f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 从缓存获取302跳转URL: {cache_item['url']}"
         )
         return RedirectResponse(cache_item["url"], 302)
@@ -325,18 +355,20 @@ async def get_file_url(file_id: int, job_id: str):
         job_id = urllib.parse.unquote(job_id)
         download_url = get_file_download_info(file_id, job_id)
         if not download_url:
-            print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 未找到文件: {file_id}")
+            logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 未找到文件: {file_id}")
 
         # 存储URL和过期时间
         download_url_cache[file_id] = {
             "url": download_url,
             "expire_time": time.time()
-            + my_utils.get_config_val("cacheExpireTime", job_id, default_val=300),
+            + get_config_val("cacheExpireTime", job_id, default_val=300),
         }
-        print(f"[{time.strftime('%m-%d %H:%M:%S')}] 302跳转成功: {download_url}")
+        logger.info(f"[{time.strftime('%m-%d %H:%M:%S')}] 302跳转成功: {download_url}")
 
         return RedirectResponse(download_url, 302)
     except Exception as e:
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 获取文件下载链接失败: {str(e)}")
+        logger.info(
+            f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 获取文件下载链接失败: {str(e)}"
+        )
 
-    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 未找到文件: {file_id}")
+    logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 未找到文件: {file_id}")

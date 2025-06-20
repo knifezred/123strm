@@ -7,4 +7,7 @@ aiohttp>=3.9.0
 aiofiles>=23.2.1
 fastapi>=0.95.2
 uvicorn>=0.22.0
+watchdog==3.0.0
 # python-dotenv>=1.0.0
+# 日志相关
+logging

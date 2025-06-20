@@ -14,6 +14,9 @@ import aiofiles
 import asyncio
 import uvicorn
 
+from app import __version__
+from app import logger, config
+
 from app.api import (
     get_access_token,
     get_file_download_info,
@@ -25,27 +28,24 @@ from app.api import (
 
 from app.api import local302Api
 
-from app.utils import Utils
+from app.utils import (
+    get_config_val,
+    download_file,
+    is_filetype_downloadable,
+    save_file_ids,
+)
+
+from app.file_monitor import FileMonitor
 
 # 添加时区设置
 import pytz
 
-my_utils = Utils()
+# 文件删除监控
+watch_dir = "/media/"
+monitor = FileMonitor()
 
 # 全局网盘文件列表
 cloud_files = set()
-
-
-def should_download_file(file_type, job_id):
-    """
-    判断是否应该下载指定类型的文件
-    :param file_type: 文件类型配置名
-    :return: bool 是否下载
-    """
-    return (
-        my_utils.get_config_val(file_type, job_id, default_val=False)
-        and my_utils.get_config_val("flatten_mode", job_id, default_val=False) == False
-    )
 
 
 def download_with_log(file_type, target_path, file_info, job_id):
@@ -56,17 +56,18 @@ def download_with_log(file_type, target_path, file_info, job_id):
     :param file_info: 文件详情
     """
     target_file = os.path.join(target_path, file_info.get("filename", ""))
-    cloud_files.add(target_file)
+    # 存储文件路径和文件ID的键值对
+    cloud_files[target_file] = file_info["fileId"]
     # 判断文件是否存在
     if not os.path.exists(target_file):
         download_url = get_file_download_info(file_info["fileId"], job_id)
-        my_utils.download_file(download_url, target_file)
-        print(f"下载成功: {target_file}")
+        download_file(download_url, target_file)
+        logger.info(f"下载成功: {target_file}")
 
 
 def traverse_folders(job_id, parent_id=0, indent=0, parent_path=""):
     if parent_id == 0:
-        parent_id = my_utils.get_config_val("rootFolderId", job_id=job_id)
+        parent_id = get_config_val("rootFolderId", job_id=job_id)
     # 兼容同账号多文件夹配置
     if "," in str(parent_id):
         parent_id_list = parent_id.split(",")
@@ -94,7 +95,7 @@ def process_file_list(job_id, file_list, parent_id, parent_path, indent):
     2. 使用更快的路径拼接方式
     3. 减少不必要的变量创建
     """
-    target_dir = my_utils.get_config_val("targetDir", job_id=job_id)
+    target_dir = get_config_val("targetDir", job_id=job_id)
     file_list_data = file_list["data"]["fileList"]
 
     for item in file_list_data:
@@ -103,7 +104,7 @@ def process_file_list(job_id, file_list, parent_id, parent_path, indent):
         full_path = f"{parent_path}/{filename}" if parent_path else filename
 
         if item_type == 1:  # 文件夹
-            cloud_files.add(os.path.join(target_dir, full_path))
+            cloud_files[os.path.join(target_dir, full_path)] = item["fileId"]
             traverse_folders(job_id, item["fileId"], indent + 1, full_path)
         elif item_type == 0:  # 文件
             process_file(item, parent_path, job_id)
@@ -123,27 +124,25 @@ def process_file(file_info, parent_path, job_id):
 
     file_name = file_info.get("filename", "")
     file_base_name, file_extension = os.path.splitext(file_name)
-    target_path = os.path.join(
-        my_utils.get_config_val("targetDir", job_id), parent_path
-    )
+    target_path = os.path.join(get_config_val("targetDir", job_id), parent_path)
     if file_extension in video_extensions:
         # 只处理大于最小文件大小的文件
         if int(file_info["size"]) <= int(
-            my_utils.get_config_val("minFileSize", job_id, default_val=104857600)
+            get_config_val("minFileSize", job_id, default_val=104857600)
         ):
             return
         # 生成strm文件
         video_url = os.path.join(
-            my_utils.get_config_val("pathPrefix", job_id, default_val="/"),
+            get_config_val("pathPrefix", job_id, default_val="/"),
             parent_path,
             file_name,
         )
-        if my_utils.get_config_val("use302Url", job_id, default_val=True):
+        if get_config_val("use302Url", job_id, default_val=True):
             job_id_encode = urllib.parse.quote(job_id)
-            video_url = f"{my_utils.get_config_val("proxy",job_id,default_val="http://127.0.0.1:1236")}/get_file_url/{file_info["fileId"]}/{job_id_encode}"
-        if my_utils.get_config_val("flatten_mode", job_id, default_val=False):
+            video_url = f"{get_config_val("proxy",job_id,default_val="http://127.0.0.1:1236")}/get_file_url/{file_info["fileId"]}/{job_id_encode}"
+        if get_config_val("flatten_mode", job_id, default_val=False):
             # 平铺模式
-            target_path = my_utils.get_config_val("targetDir", job_id)
+            target_path = get_config_val("targetDir", job_id)
             strm_path = os.path.join(target_path, file_base_name + ".strm")
         else:
             strm_path = os.path.join(target_path, file_base_name + ".strm")
@@ -151,27 +150,33 @@ def process_file(file_info, parent_path, job_id):
         if not os.path.exists(os.path.dirname(strm_path)):
             os.makedirs(os.path.dirname(strm_path), exist_ok=True)
         # 检查文件是否存在，文件不存在或者覆写为True时写入文件
-        if not os.path.exists(strm_path) or my_utils.get_config_val(
+        if not os.path.exists(strm_path) or get_config_val(
             "overwrite", job_id, default_val=False
         ):
             with open(strm_path, "w", encoding="utf-8") as f:
                 f.write(video_url)
-            print(strm_path)
-        cloud_files.add(strm_path)
-    elif file_extension in image_extensions and should_download_file("image", job_id):
+            logger.info(strm_path)
+        cloud_files[strm_path] = file_info["fileId"]
+    elif file_extension in image_extensions and is_filetype_downloadable(
+        "image", job_id
+    ):
         download_with_log("图片", target_path, file_info, job_id)
-    elif file_extension in subtitle_extensions and should_download_file(
+    elif file_extension in subtitle_extensions and is_filetype_downloadable(
         "subtitle", job_id
     ):
         download_with_log("字幕", target_path, file_info, job_id)
-    elif file_extension == ".nfo" and should_download_file("nfo", job_id):
+    elif file_extension == ".nfo" and is_filetype_downloadable("nfo", job_id):
         download_with_log("nfo", target_path, file_info, job_id)
 
 
 # 初始化网盘文件列表
 def clean_cloud_files():
+    """
+    清空网盘文件列表
+    cloud_files是字典结构，存储文件路径和文件ID的键值对
+    """
     global cloud_files
-    cloud_files.clear()
+    cloud_files = {}
 
 
 def clean_local_files(local_dir):
@@ -179,14 +184,16 @@ def clean_local_files(local_dir):
     清理本地目录中不在网盘文件列表中的文件和空文件夹
     :param local_dir: 要清理的本地目录路径
     """
-    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 开始清理空目录和失效文件")
+    logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 开始清理空目录和失效文件")
+    # 暂停监控
+    monitor.stop_monitoring()
     for root, dirs, files in os.walk(local_dir, topdown=False):
         # 删除不在网盘列表中的文件
         for file in files:
             file_path = os.path.join(root, file)
             if file_path not in cloud_files:
                 os.remove(file_path)
-                print(f"删除文件: {file_path}")
+                logger.info(f"删除文件: {file_path}")
 
         # 删除空文件夹
         for dir in dirs:
@@ -194,18 +201,19 @@ def clean_local_files(local_dir):
             try:
                 if not os.listdir(dir_path):
                     os.rmdir(dir_path)
-                    print(f"删除空文件夹: {dir_path}")
+                    logger.info(f"删除空文件夹: {dir_path}")
             except OSError:
                 pass
+    monitor.restart_monitoring("/media/")
 
 
 def clean_expired_cache():
     """清理过期缓存项"""
     clean_download_url_cache()
     # 心跳检测
-    if "JobList" in my_utils.config:
+    if "JobList" in config:
         # 遍历 JobList 中的每个任务
-        for job in my_utils.config["JobList"]:
+        for job in config["JobList"]:
             job_id = job["id"]
             heartbeat(job_id)
 
@@ -213,23 +221,22 @@ def clean_expired_cache():
 def job():
     # 确保使用正确时区
     now = datetime.now(pytz.timezone("Asia/Shanghai"))
-    print(f"任务执行时间: {now.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 开始执行定时任务")
-    # 加载最新config配置
-    config = my_utils.load_config()
+    logger.info(f"任务执行时间: {now.strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 开始执行定时任务")
     # 检查配置中是否存在 JobList
     if "JobList" in config:
         # 遍历 JobList 中的每个任务
         for job in config["JobList"]:
             job_id = job["id"]
-            print(f"正在处理任务: {job_id}")
+            logger.info(f"正在处理任务: {job_id}")
             # 清空云盘文件列表
             clean_cloud_files()
             # 这里可以根据具体需求添加对每个任务的处理逻辑
             traverse_folders(job_id)
             # 遍历完成后清理过期文件和空文件夹
-            clean_local_files(my_utils.get_config_val("targetDir", job_id=job_id))
-    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 定时任务执行完成")
+            save_file_ids(cloud_files, job_id)
+            clean_local_files(get_config_val("targetDir", job_id=job_id))
+    logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 定时任务执行完成")
 
 
 async def run_scheduler():
@@ -237,32 +244,37 @@ async def run_scheduler():
     运行定时任务调度器
     """
     # 开启即运行
-    if my_utils.get_config_val("runningOnStart", default_val=False):
+    if get_config_val("runningOnStart", default_val=False):
         job()
-    while True:
-        schedule.run_pending()
-        # 清理过期缓存
-        clean_expired_cache()
-        await asyncio.sleep(150)
+    try:
+        while True:
+            schedule.run_pending()
+            # 清理过期缓存
+            clean_expired_cache()
+            await asyncio.sleep(150)
+    except Exception as e:
+        logger.error(f"运行异常: {e}")
+        monitor.stop_monitoring()
+        raise e
 
 
 async def main():
     """
     主函数，同时启动API服务和定时任务
     """
-    print("123strm v1.5 已启动...", flush=True)
-    my_utils.load_config()
-    if my_utils.config is not None:
-        print("config加载成功")
+    logger.info(f"123strm v{__version__} 已启动...")
+    if config is not None:
+        logger.info("config加载成功")
+        if get_config_val("watchDelete", default_val=False):
+            logger.info("删除本地文件功能已开启")
+            monitor.start_monitoring(watch_dir)
     else:
         # 抛出一个自定义异常，这里以 ValueError 为例
         raise ValueError("config加载失败，程序执行异常")
     # 计算下次执行时间
-    cron = croniter(
-        my_utils.get_config_val(key="cron", default_val="0 1 * * *"), datetime.now()
-    )
+    cron = croniter(get_config_val(key="cron", default_val="0 1 * * *"), datetime.now())
     next_time = cron.get_next(datetime)
-    print(f"下次执行时间: {next_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info(f"下次执行时间: {next_time.strftime('%Y-%m-%d %H:%M:%S')}")
     schedule.every().day.at(next_time.strftime("%H:%M")).do(job)
     server = uvicorn.Server(
         config=uvicorn.Config(app=local302Api, host="0.0.0.0", port=1236)
