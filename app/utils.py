@@ -30,7 +30,6 @@ def load_config() -> dict:
     config_path = os.path.join(config_folder, "config.yml")
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
-    logger.info("config loaded")
     return config
 
 

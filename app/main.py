@@ -237,6 +237,7 @@ def job():
             save_file_ids(cloud_files, job_id)
             clean_local_files(get_config_val("targetDir", job_id=job_id))
     logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 定时任务执行完成")
+    reschedule()
 
 
 async def run_scheduler():
@@ -247,35 +248,85 @@ async def run_scheduler():
     if get_config_val("runningOnStart", default_val=False):
         job()
     try:
+        schedule_job()
         while True:
             schedule.run_pending()
             # 清理过期缓存
             clean_expired_cache()
-            await asyncio.sleep(150)
+            await asyncio.sleep(30)
     except Exception as e:
         logger.error(f"运行异常: {e}")
         monitor.stop_monitoring()
         raise e
 
 
+def schedule_job():
+    """
+    根据cron表达式调度任务
+    :param job: 要执行的任务函数
+    """
+    cron_str = get_config_val(key="cron", default_val="0 1 * * *")
+    cron = croniter(cron_str, datetime.now())
+    next_time = cron.get_next(datetime)
+
+    logger.info(f"下次执行时间: {next_time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    # 根据cron表达式设置不同的调度方式
+    parts = cron_str.split()
+    if len(parts) >= 5:  # 完整cron表达式
+        if "*/" in parts[0]:  # 每N分钟执行
+            minutes = int(parts[0].split("/")[1])
+            logger.info(f"每{minutes}分钟执行一次")
+            schedule.every(minutes).minutes.do(job)
+        elif "*/" in parts[1]:  # 每N小时执行
+            hours = int(parts[1].split("/")[1])
+            logger.info(f"每{hours}小时执行一次")
+            schedule.every(hours).hours.do(job)
+        elif "*/" in parts[2]:  # 每N天执行
+            days = int(parts[2].split("/")[1])
+            logger.info(f"每{days}天执行一次")
+            schedule.every(days).days.at(next_time.strftime("%H:%M:%S")).do(job)
+        elif parts[2] != "*":  # 按月执行
+            day_of_month = int(parts[2])
+            logger.info(f"每月{day_of_month}号执行一次")
+            # 计算距离下次执行的天数
+            days_until = (day_of_month - datetime.now().day) % 30
+            days_until = 30 if days_until == 0 else days_until
+            # 如果是当天，则推迟一个月
+            schedule.every(days_until).days.at(next_time.strftime("%H:%M:%S")).do(job)
+        elif parts[4] != "*":  # 按周执行
+            weekday = int(parts[4])
+            logger.info(f"每周{weekday}执行一次")
+            # 计算距离下次执行的天数
+            days_until = (weekday - datetime.now().weekday()) % 7
+            days_until = 7 if days_until == 0 else days_until  # 如果是当天，则推迟一周
+            schedule.every(days_until).days.at(next_time.strftime("%H:%M:%S")).do(job)
+        else:  # 按具体时间执行
+            logger.info(f"每天{next_time.strftime('%H:%M')}执行一次")
+            schedule.every().day.at(next_time.strftime("%H:%M:%S")).do(job)
+
+
+# 添加任务完成后重新调度的逻辑
+def reschedule():
+    schedule.clear()
+    schedule_job()
+
+
 async def main():
     """
     主函数，同时启动API服务和定时任务
     """
-    logger.info(f"123strm v{__version__} 已启动...")
     if config is not None:
-        logger.info("config加载成功")
+        logger.info("config 加载成功")
         if get_config_val("watchDelete", default_val=False):
             logger.info("删除本地文件功能已开启")
             monitor.start_monitoring(watch_dir)
     else:
         # 抛出一个自定义异常，这里以 ValueError 为例
         raise ValueError("config加载失败，程序执行异常")
-    # 计算下次执行时间
-    cron = croniter(get_config_val(key="cron", default_val="0 1 * * *"), datetime.now())
-    next_time = cron.get_next(datetime)
-    logger.info(f"下次执行时间: {next_time.strftime('%Y-%m-%d %H:%M:%S')}")
-    schedule.every().day.at(next_time.strftime("%H:%M")).do(job)
+
+    logger.info(f"123strm v{__version__} 已启动...")
+
     server = uvicorn.Server(
         config=uvicorn.Config(app=local302Api, host="0.0.0.0", port=1236)
     )

@@ -14,7 +14,7 @@ class strmFileWatcher(FileSystemEventHandler):
     """文件系统事件处理器，用于监控并处理strm文件"""
 
     def __init__(self):
-        logger.info("strmFileWatcher初始化")
+        logger.info("FileWatcher 初始化完成")
 
     def on_deleted(self, event):
         """
