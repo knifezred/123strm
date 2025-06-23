@@ -53,12 +53,13 @@ def get_config_val(
                 logger.info("job任务配置异常")
 
             if job is not None and job["id"] == job_id:
-                return job.get(key, config.get(key))
+                if job.get(key) is not None:
+                    return job.get(key)
 
     if key not in config and default_val is not None:
         return default_val
     elif key not in config and default_val is None:
-        logger.info(f"配置项 {key} 不存在")
+        logger.warning(f"配置项 {key} 不存在, 且不存在默认值")
 
     return config[key]
 

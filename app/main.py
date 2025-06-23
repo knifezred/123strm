@@ -128,7 +128,7 @@ def process_file(file_info, parent_path, job_id):
     if file_extension in video_extensions:
         # 只处理大于最小文件大小的文件
         if int(file_info["size"]) <= int(
-            get_config_val("minFileSize", job_id, default_val=104857600)
+            get_config_val("minFileSize", job_id, default_val='104857600')
         ):
             return
         # 生成strm文件

@@ -9,12 +9,18 @@ rootFolderId: "0"
 targetDir: "/media/"
 # 定时任务cron表达式，不配置则默认为每天凌晨1点执行
 cron: "0 10 * * *"
-# 平铺模式，开启后 subtitle、image、nfo 强制关闭(可选，默认 False)
-flatten_mode: False
+# strm地址使用官方下载链接,默认为Flase
+use302Url: True
+# 必须配置，http://nas_ip:1236（默认 http://127.0.0.1:1236）
+proxy: 'http://127.0.0.1:1236'
+# 302链接缓存过期时间(秒)，默认5分钟
+cacheExpireTime: 300
 # strm路径前缀，可设置为cd2挂载的目录或者123盘webdav挂载的路径，需要加上对应设置的rootFolder的文件夹目录
 # 如：选择的rootFolder为 /影视剧/电视剧，cd2映射的路径为 /volume1/docker/cloud_nas/123云盘
 # 则pathPrefix为 /volume1/docker/cloud_nas/123云盘/影视剧/电视剧
 pathPrefix: "/volume1/docker/cloud_nas/123云盘/影视剧"
+# 平铺模式，开启后 subtitle、image、nfo 强制关闭(可选，默认 False)
+flatten_mode: False
 # 是否下载字幕文件（可选，默认 False）
 subtitle: True
 # 是否下载图片文件（可选，默认 False）
@@ -23,5 +29,7 @@ image: True
 nfo: True
 # 视频文件最小限制，低于该大小的视频不处理，默认为100Mb
 minFileSize: 104857600
-# strm地址使用官方下载链接,默认为Flase
-use302Url: True
+# 程序启动后立即执行任务 (可选，默认 False)
+runningOnStart: False
+# 监控strm文件删除 (可选，默认 False)
+watchDelete: False
