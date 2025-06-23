@@ -330,7 +330,7 @@ async def main():
     server = uvicorn.Server(
         config=uvicorn.Config(app=local302Api, host="0.0.0.0", port=1236)
     )
-    await asyncio.gather(server.serve(), run_scheduler())
+    await asyncio.gather(run_scheduler(), server.serve())
 
 
 if __name__ == "__main__":

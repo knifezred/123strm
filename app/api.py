@@ -196,14 +196,22 @@ def heartbeat(job_id):
     :param job_id: 任务ID
     """
     try:
-        jsonData = http_123_request(
-            job_id, path="/api/v2/file/list?parentFileId=0&limit=1"
-        )
-        if jsonData["code"] != 0:
-            logger.info(f"心跳检测失败{jsonData["code"]}:{jsonData["message"]}")
-            clean_local_access_token(job_id)
+        heartbeat_url = "heartbeat_" + job_id
+        heartbeat_cache = download_url_cache.get(heartbeat_url)
+        if heartbeat_cache is None:
+            jsonData = http_123_request(
+                job_id, path="/api/v2/file/list?parentFileId=0&limit=1"
+            )
+            download_url_cache[heartbeat_url] = {
+                "url": heartbeat_url,
+                "expire_time": time.time()
+                + get_config_val("cacheExpireTime", job_id, default_val=300),
+            }
+            if jsonData["code"] != 0:
+                logger.warning(f"心跳检测失败{jsonData["code"]}:{jsonData["message"]}")
+                clean_local_access_token(job_id)
     except:
-        logger.info("心跳检测异常，清除缓存文件")
+        logger.warning("心跳检测异常，清除缓存文件")
         clean_local_access_token(job_id)
 
 
@@ -345,9 +353,7 @@ async def get_file_url(file_id: int, job_id: str):
     # 检查缓存
     cache_item = download_url_cache.get(file_id)
     if cache_item is not None:
-        logger.info(
-            f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 从缓存获取302跳转URL: {cache_item['url']}"
-        )
+        logger.info(f"从缓存获取302跳转URL: {cache_item['url']}")
         return RedirectResponse(cache_item["url"], 302)
 
     # 获取下载URL并存入缓存
@@ -355,7 +361,7 @@ async def get_file_url(file_id: int, job_id: str):
         job_id = urllib.parse.unquote(job_id)
         download_url = get_file_download_info(file_id, job_id)
         if not download_url:
-            logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 未找到文件: {file_id}")
+            logger.info(f"未找到文件: {file_id}")
 
         # 存储URL和过期时间
         download_url_cache[file_id] = {
@@ -363,12 +369,10 @@ async def get_file_url(file_id: int, job_id: str):
             "expire_time": time.time()
             + get_config_val("cacheExpireTime", job_id, default_val=300),
         }
-        logger.info(f"[{time.strftime('%m-%d %H:%M:%S')}] 302跳转成功: {download_url}")
+        logger.info(f"302跳转成功: {download_url}")
 
         return RedirectResponse(download_url, 302)
     except Exception as e:
-        logger.info(
-            f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 获取文件下载链接失败: {str(e)}"
-        )
+        logger.info(f"获取文件下载链接失败: {str(e)}")
 
-    logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 未找到文件: {file_id}")
+    logger.info(f"未找到文件: {file_id}")
