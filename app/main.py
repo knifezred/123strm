@@ -116,9 +116,19 @@ def process_file(file_info, parent_path, job_id):
     :param file_info: 文件信息字典
     """
     # 视频文件扩展名
-    video_extensions = [".mp4", ".mkv", ".avi", ".mov", ".flv", ".wmv", ".m2ts"]
+    video_extensions = [
+        ".mp4",
+        ".mkv",
+        ".avi",
+        ".mov",
+        ".flv",
+        ".wmv",
+        ".m2ts",
+        ".ts",
+        ".iso",
+    ]
     # 图片文件扩展名
-    image_extensions = [".jpg", ".jpeg", ".png"]
+    image_extensions = [".jpg", ".jpeg", ".png", ".webp"]
     # 字幕文件扩展名
     subtitle_extensions = [".srt", ".ass", ".ssa", ".sub"]
 
@@ -128,7 +138,7 @@ def process_file(file_info, parent_path, job_id):
     if file_extension in video_extensions:
         # 只处理大于最小文件大小的文件
         if int(file_info["size"]) <= int(
-            get_config_val("minFileSize", job_id, default_val='104857600')
+            get_config_val("minFileSize", job_id, default_val="104857600")
         ):
             return
         # 生成strm文件
@@ -186,7 +196,9 @@ def clean_local_files(local_dir):
     """
     logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 开始清理空目录和失效文件")
     # 暂停监控
-    monitor.stop_monitoring()
+    if get_config_val("watchDelete", default_val=False):
+        monitor.stop_monitoring()
+
     for root, dirs, files in os.walk(local_dir, topdown=False):
         # 删除不在网盘列表中的文件
         for file in files:
@@ -204,7 +216,9 @@ def clean_local_files(local_dir):
                     logger.info(f"删除空文件夹: {dir_path}")
             except OSError:
                 pass
-    monitor.restart_monitoring("/media/")
+
+    if get_config_val("watchDelete", default_val=False):
+        monitor.restart_monitoring("/media/")
 
 
 def clean_expired_cache():
