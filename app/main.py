@@ -134,6 +134,7 @@ def process_file(file_info, parent_path, job_id):
 
     file_name = file_info.get("filename", "")
     file_base_name, file_extension = os.path.splitext(file_name)
+    file_extension = file_extension.lower()
     target_path = os.path.join(get_config_val("targetDir", job_id), parent_path)
     if file_extension in video_extensions:
         # 只处理大于最小文件大小的文件
