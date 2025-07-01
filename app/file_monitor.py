@@ -22,7 +22,7 @@ class strmFileWatcher(FileSystemEventHandler):
         :param event: 文件系统事件对象
         """
         logger.info("监听到文件删除, 准备移除云端文件")
-        if not event.is_directory and event.src_path.endswith(".strm"):
+        if not event.is_directory:
             # 从cache_files.json获取fileID
             abs_path = os.path.abspath(event.src_path)
             file_id, job_id = self.get_file_id_by_path(abs_path)

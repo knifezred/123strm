@@ -131,17 +131,17 @@ def http_123_request(job_id, payload="", path="", method="GET"):
             api_pool.release_connection(conn)
 
 
-def auth_access_token(clientId, clientSecret):
+def auth_access_token(client_id, client_secret):
     """
     获取123云盘API访问令牌
-    :param clientId: 123云盘应用ID
-    :param clientSecret: 123云盘应用密钥
+    :param client_id: 123云盘应用ID
+    :param client_secret: 123云盘应用密钥
     :return: 访问令牌字典
     """
     conn = None
     try:
         conn = api_pool.get_connection()
-        payload = json.dumps({"clientID": clientId, "clientSecret": clientSecret})
+        payload = json.dumps({"client_id": client_id, "client_secret": client_secret})
         headers = {"Platform": "open_platform", "Content-Type": "application/json"}
         conn.request("POST", "/api/v1/access_token", payload, headers)
         res = conn.getresponse()
@@ -158,9 +158,9 @@ def get_access_token(job_id):
     优先使用本地缓存，根据过期时间判断是否需要重新获取（提前一天清除缓存并返回最新token）
     :return: accessToken字符串
     """
-    clientId = get_config_val("clientID", job_id=job_id)
-    # 根据clientID生成缓存文件名
-    cache_file = os.path.join(config_folder, f"token_cache_{clientId}.json")
+    client_id = get_config_val("client_id", job_id=job_id)
+    # 根据client_id生成缓存文件名
+    cache_file = os.path.join(config_folder, f"token_cache_{client_id}.json")
     # 尝试从缓存文件读取token信息
     try:
         current_time = datetime.now().replace(tzinfo=None)
@@ -176,8 +176,8 @@ def get_access_token(job_id):
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
         pass
     # 获取新token
-    clientSecret = get_config_val("clientSecret", job_id)
-    token_response = auth_access_token(clientId, clientSecret)
+    client_secret = get_config_val("client_secret", job_id)
+    token_response = auth_access_token(client_id, client_secret)
     # 保存token到缓存文件
     with open(cache_file, "w") as f:
         json.dump(
@@ -205,7 +205,7 @@ def heartbeat(job_id):
             download_url_cache[heartbeat_url] = {
                 "url": heartbeat_url,
                 "expire_time": time.time()
-                + get_config_val("cacheExpireTime", job_id, default_val=300),
+                + get_config_val("cache_expire_time", job_id, default_val=300),
             }
             if jsonData["code"] != 0:
                 logger.warning(f"心跳检测失败{jsonData["code"]}:{jsonData["message"]}")
@@ -367,7 +367,7 @@ async def get_file_url(file_id: int, job_id: str):
         download_url_cache[file_id] = {
             "url": download_url,
             "expire_time": time.time()
-            + get_config_val("cacheExpireTime", job_id, default_val=300),
+            + get_config_val("cache_expire_time", job_id, default_val=300),
         }
         logger.info(f"302跳转成功: {download_url}")
 

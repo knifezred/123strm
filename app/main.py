@@ -44,6 +44,10 @@ import pytz
 watch_dir = "/media/"
 monitor = FileMonitor()
 
+download_image_suffix = []
+image_extensions = []
+video_extensions = []
+subtitle_extensions = []
 # 全局网盘文件列表
 cloud_files = set()
 
@@ -67,7 +71,7 @@ def download_with_log(file_type, target_path, file_info, job_id):
 
 def traverse_folders(job_id, parent_id=0, indent=0, parent_path=""):
     if parent_id == 0:
-        parent_id = get_config_val("rootFolderId", job_id=job_id)
+        parent_id = get_config_val("root_folder_id", job_id=job_id)
     # 兼容同账号多文件夹配置
     if "," in str(parent_id):
         parent_id_list = parent_id.split(",")
@@ -95,7 +99,7 @@ def process_file_list(job_id, file_list, parent_id, parent_path, indent):
     2. 使用更快的路径拼接方式
     3. 减少不必要的变量创建
     """
-    target_dir = get_config_val("targetDir", job_id=job_id)
+    target_dir = get_config_val("target_dir", job_id=job_id)
     file_list_data = file_list["data"]["fileList"]
 
     for item in file_list_data:
@@ -115,45 +119,28 @@ def process_file(file_info, parent_path, job_id):
     处理单个文件
     :param file_info: 文件信息字典
     """
-    # 视频文件扩展名
-    video_extensions = [
-        ".mp4",
-        ".mkv",
-        ".avi",
-        ".mov",
-        ".flv",
-        ".wmv",
-        ".m2ts",
-        ".ts",
-        ".iso",
-    ]
-    # 图片文件扩展名
-    image_extensions = [".jpg", ".jpeg", ".png", ".webp"]
-    # 字幕文件扩展名
-    subtitle_extensions = [".srt", ".ass", ".ssa", ".sub"]
-
     file_name = file_info.get("filename", "")
     file_base_name, file_extension = os.path.splitext(file_name)
     file_extension = file_extension.lower()
-    target_path = os.path.join(get_config_val("targetDir", job_id), parent_path)
+    target_path = os.path.join(get_config_val("target_dir", job_id), parent_path)
     if file_extension in video_extensions:
         # 只处理大于最小文件大小的文件
         if int(file_info["size"]) <= int(
-            get_config_val("minFileSize", job_id, default_val="104857600")
+            get_config_val("min_file_size", job_id, default_val="104857600")
         ):
             return
         # 生成strm文件
         video_url = os.path.join(
-            get_config_val("pathPrefix", job_id, default_val="/"),
+            get_config_val("path_prefix", job_id, default_val="/"),
             parent_path,
             file_name,
         )
-        if get_config_val("use302Url", job_id, default_val=True):
+        if get_config_val("use_302_url", job_id, default_val=True):
             job_id_encode = urllib.parse.quote(job_id)
             video_url = f"{get_config_val("proxy",job_id,default_val="http://127.0.0.1:1236")}/get_file_url/{file_info["fileId"]}/{job_id_encode}"
         if get_config_val("flatten_mode", job_id, default_val=False):
             # 平铺模式
-            target_path = get_config_val("targetDir", job_id)
+            target_path = get_config_val("target_dir", job_id)
             strm_path = os.path.join(target_path, file_base_name + ".strm")
         else:
             strm_path = os.path.join(target_path, file_base_name + ".strm")
@@ -171,7 +158,10 @@ def process_file(file_info, parent_path, job_id):
     elif file_extension in image_extensions and is_filetype_downloadable(
         "image", job_id
     ):
-        download_with_log("图片", target_path, file_info, job_id)
+        if not download_image_suffix:
+            download_with_log("图片", target_path, file_info, job_id)
+        elif file_base_name.endswith(tuple(download_image_suffix)):
+            download_with_log("图片", target_path, file_info, job_id)
     elif file_extension in subtitle_extensions and is_filetype_downloadable(
         "subtitle", job_id
     ):
@@ -197,7 +187,7 @@ def clean_local_files(local_dir):
     """
     logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 开始清理空目录和失效文件")
     # 暂停监控
-    if get_config_val("watchDelete", default_val=False):
+    if get_config_val("watch_delete", default_val=False):
         monitor.stop_monitoring()
 
     for root, dirs, files in os.walk(local_dir, topdown=False):
@@ -218,7 +208,7 @@ def clean_local_files(local_dir):
             except OSError:
                 pass
 
-    if get_config_val("watchDelete", default_val=False):
+    if get_config_val("watch_delete", default_val=False):
         monitor.restart_monitoring("/media/")
 
 
@@ -226,31 +216,55 @@ def clean_expired_cache():
     """清理过期缓存项"""
     clean_download_url_cache()
     # 心跳检测
-    if "JobList" in config:
-        # 遍历 JobList 中的每个任务
-        for job in config["JobList"]:
+    if "job_list" in config:
+        # 遍历 job_list 中的每个任务
+        for job in config["job_list"]:
             job_id = job["id"]
             heartbeat(job_id)
 
 
 def job():
+    global image_extensions
+    global video_extensions
+    global subtitle_extensions
+    global download_image_suffix
     # 确保使用正确时区
     now = datetime.now(pytz.timezone("Asia/Shanghai"))
     logger.info(f"任务执行时间: {now.strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 开始执行定时任务")
-    # 检查配置中是否存在 JobList
-    if "JobList" in config:
-        # 遍历 JobList 中的每个任务
-        for job in config["JobList"]:
+    # 检查配置中是否存在 job_list
+    if "job_list" in config:
+        # 遍历 job_list 中的每个任务
+        for job in config["job_list"]:
             job_id = job["id"]
             logger.info(f"正在处理任务: {job_id}")
+            image_extensions = get_config_val(
+                "image_extensions",
+                job_id=job_id,
+                default_val=[".jpg", ".jpeg", ".png", ".webp"],
+            )
+            video_extensions = get_config_val(
+                "video_extensions",
+                job_id=job_id,
+                default_val=[".mp4", ".mkv", ".ts", ".iso"],
+            )
+            subtitle_extensions = get_config_val(
+                "subtitle_extensions",
+                job_id=job_id,
+                default_val=[".srt", ".ass", ".sub"],
+            )
+            download_image_suffix = get_config_val(
+                "download_image_suffix",
+                job_id=job_id,
+                default_val=[],
+            )
             # 清空云盘文件列表
             clean_cloud_files()
             # 这里可以根据具体需求添加对每个任务的处理逻辑
             traverse_folders(job_id)
             # 遍历完成后清理过期文件和空文件夹
             save_file_ids(cloud_files, job_id)
-            clean_local_files(get_config_val("targetDir", job_id=job_id))
+            clean_local_files(get_config_val("target_dir", job_id=job_id))
     logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 定时任务执行完成")
     reschedule()
 
@@ -260,7 +274,7 @@ async def run_scheduler():
     运行定时任务调度器
     """
     # 开启即运行
-    if get_config_val("runningOnStart", default_val=False):
+    if get_config_val("running_on_start", default_val=False):
         job()
     try:
         schedule_job()
@@ -333,7 +347,7 @@ async def main():
     """
     if config is not None:
         logger.info("config 加载成功")
-        if get_config_val("watchDelete", default_val=False):
+        if get_config_val("watch_delete", default_val=False):
             logger.info("删除本地文件功能已开启")
             monitor.start_monitoring(watch_dir)
     else:

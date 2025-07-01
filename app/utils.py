@@ -48,7 +48,7 @@ def get_config_val(
         config = load_config()
 
     if job_id is not None:
-        for job in config["JobList"]:
+        for job in config["job_list"]:
             if job is None:
                 logger.info("job任务配置异常")
 
@@ -161,9 +161,9 @@ def clean_local_access_token(job_id):
     清理指定任务的本地缓存访问令牌
     :param job_id: 任务ID
     """
-    clientId = get_config_val("clientID", job_id)
-    # 根据clientID生成缓存文件名
-    cache_file = os.path.join(config_folder, f"token_cache_{clientId}.json")
+    client_id = get_config_val("client_id", job_id)
+    # 根据client_id生成缓存文件名
+    cache_file = os.path.join(config_folder, f"token_cache_{client_id}.json")
     if os.path.exists(cache_file):
         logger.info("清除失效access_token")
         os.remove(cache_file)
