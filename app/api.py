@@ -121,10 +121,14 @@ def http_123_request(job_id, payload="", path="", method="GET"):
         data = res.read()
         response = json.loads(data.decode("utf-8"))
         if response["code"] != 0:
-            logger.warning(job_id + " " + path + "\n" + response["message"])
-            raise HTTPException(
-                status_code=response["code"], detail=response["message"]
-            )
+            if response["code"] == 401:
+                logger.warning(job_id + "\n" + response["message"])
+                clean_local_access_token(job_id)
+            else:
+                logger.warning(job_id + "\n" + response["message"])
+                raise HTTPException(
+                    status_code=response["code"], detail=response["message"]
+                )
         return response
     finally:
         if conn is not None:
@@ -176,7 +180,7 @@ def get_access_token(job_id):
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
         pass
     # 获取新token
-    client_secret = get_config_val("client_secret", job_id)
+    client_secret = get_config_val("client_secret", job_id=job_id)
     token_response = auth_access_token(client_id, client_secret)
     # 保存token到缓存文件
     with open(cache_file, "w") as f:
@@ -208,11 +212,13 @@ def heartbeat(job_id):
                 + get_config_val("cache_expire_time", job_id, default_val=300),
             }
             if jsonData["code"] != 0:
-                logger.warning(f"心跳检测失败{jsonData["code"]}:{jsonData["message"]}")
-                clean_local_access_token(job_id)
-    except:
-        logger.warning("心跳检测异常，清除缓存文件")
+                logger.warning(
+                    f"{job_id} 心跳检测失败 {jsonData["code"]}:{jsonData["message"]}"
+                )
+                # clean_local_access_token(job_id)
+    except Exception as e:
         clean_local_access_token(job_id)
+        logger.warning(f"{job_id} 心跳检测异常，清除缓存文件。error:{e}")
 
 
 def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, max_retries=0):

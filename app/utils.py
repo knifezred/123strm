@@ -164,6 +164,7 @@ def clean_local_access_token(job_id):
     client_id = get_config_val("client_id", job_id)
     # 根据client_id生成缓存文件名
     cache_file = os.path.join(config_folder, f"token_cache_{client_id}.json")
+    logger.info(f"清理任务 {job_id} 本地缓存路径 {cache_file}")
     if os.path.exists(cache_file):
-        logger.info("清除失效access_token")
         os.remove(cache_file)
+        logger.info(f"清除失效token文件成功: {cache_file}")

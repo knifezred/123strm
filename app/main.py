@@ -282,7 +282,7 @@ async def run_scheduler():
             schedule.run_pending()
             # 清理过期缓存
             clean_expired_cache()
-            await asyncio.sleep(30)
+            await asyncio.sleep(10)
     except Exception as e:
         logger.error(f"运行异常: {e}")
         monitor.stop_monitoring()
