@@ -9,6 +9,7 @@ import yaml
 import os
 import requests
 import time
+import shutil
 import schedule
 import threading
 import urllib.parse
@@ -16,9 +17,14 @@ from croniter import croniter
 from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException
 from fastapi import Query
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, FileResponse
 
-from app.utils import get_config_val, clean_local_access_token, config_folder
+from app.utils import (
+    get_config_val,
+    clean_local_access_token,
+    config_folder,
+    load_config,
+)
 
 # 添加时区设置
 import pytz
@@ -339,7 +345,33 @@ local302Api = FastAPI()
 
 @local302Api.get("/")
 async def index():
-    return "123strm已启动"
+    return FileResponse("app/public/index.html")
+
+
+@local302Api.get("/get_config")
+async def get_config():
+    return load_config()
+
+
+@local302Api.post("/save_config")
+async def save_config(update_config: dict):
+    """
+    保存配置
+    :param update_config: 更新的配置数据(dict格式)
+    :return: 保存结果
+    """
+    try:
+        # 备份现有配置
+        backup_path = os.path.join(config_folder, "config.bak.yml")
+        shutil.copyfile(os.path.join(config_folder, "config.yml"), backup_path)
+        with open(
+            os.path.join(config_folder, "config.yml"), "w", encoding="utf-8"
+        ) as f:
+            yaml.dump(update_config, f, allow_unicode=True)
+        load_config()
+        return {"message": "配置已保存"}
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"配置保存失败: {str(e)}")
 
 
 @local302Api.get("/get_file_url/{file_id}/{job_id}")

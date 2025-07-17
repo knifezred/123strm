@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>123strm配置</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        danger: '#FF4D4F',
+                        dark: '#1D2129',
+                        light: '#F2F3F5',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .input-focus {
+                @apply focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-200;
+            }
+            .btn-hover {
+                @apply hover:shadow-md transition-all duration-200;
+            }
+        }
+    </style>
+</head>
+
+<body class="font-inter bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-2 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <h1 class="text-xl font-semibold text-gray-800">123strm</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a class="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    href="https://www.omgx.cn/archives/1749797289692"
+                    target="_blank">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path fill="currentColor" fill-rule="evenodd"
+                            d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10M12 7.75c-.621 0-1.125.504-1.125 1.125a.75.75 0 0 1-1.5 0a2.625 2.625 0 1 1 4.508 1.829q-.138.142-.264.267a7 7 0 0 0-.571.617c-.22.282-.298.489-.298.662V13a.75.75 0 0 1-1.5 0v-.75c0-.655.305-1.186.614-1.583c.229-.294.516-.58.75-.814q.106-.105.193-.194A1.125 1.125 0 0 0 12 7.75M12 17a1 1 0 1 0 0-2a1 1 0 0 0 0 2"
+                            clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a class="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    href="https://github.com/knifezred/123strm"
+                    target="_blank">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M12.001 2c-5.525 0-10 4.475-10 10a9.99 9.99 0 0 0 6.837 9.488c.5.087.688-.213.688-.476c0-.237-.013-1.024-.013-1.862c-2.512.463-3.162-.612-3.362-1.175c-.113-.288-.6-1.175-1.025-1.413c-.35-.187-.85-.65-.013-.662c.788-.013 1.35.725 1.538 1.025c.9 1.512 2.337 1.087 2.912.825c.088-.65.35-1.087.638-1.337c-2.225-.25-4.55-1.113-4.55-4.938c0-1.088.387-1.987 1.025-2.687c-.1-.25-.45-1.275.1-2.65c0 0 .837-.263 2.75 1.024a9.3 9.3 0 0 1 2.5-.337c.85 0 1.7.112 2.5.337c1.913-1.3 2.75-1.024 2.75-1.024c.55 1.375.2 2.4.1 2.65c.637.7 1.025 1.587 1.025 2.687c0 3.838-2.337 4.688-4.562 4.938c.362.312.675.912.675 1.85c0 1.337-.013 2.412-.013 2.75c0 .262.188.574.688.474A10.02 10.02 0 0 0 22 12c0-5.525-4.475-10-10-10" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+        <div class="container mx-auto max-w-6xl">
+            <!-- 页面标题 -->
+            <!-- <div class="mb-8">
+                <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-gray-800">123strm配置</h1>
+                <p class="text-gray-500 mt-1">配置123strm相关参数和任务</p>
+            </div> -->
+            <!-- 任务配置区域 -->
+            <div class="bg-white rounded-xl card-shadow p-6 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold">
+                        任务配置
+                    </h2>
+                    <button id="add-task-btn"
+                        class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 flex items-center btn-hover">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 5v14m-7-7h14" />
+                        </svg>
+                        添加任务
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th
+                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    ID</th>
+                                <th
+                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    根文件夹ID</th>
+                                <th
+                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    输出路径</th>
+                                <th
+                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="job_table">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 123盘配置区域 -->
+            <div class="bg-white rounded-xl card-shadow p-6 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold">通用配置</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- 左侧设置 -->
+                    <div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">定时任务cron表达式</label>
+                            <div class="flex items-center">
+                                <input type="text" id="cron" value="0 1 * * *"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">不配置则默认为每天凌晨1点执行，为防止冲突，所有job都使用一个corn，依次生成直到全部结束</p>
+                        </div>
+                        <div class="mb-8">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">302链接（推荐使用）</label>
+                            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                <span>使用官方下载链接播放（默认True）</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="use_302_url" checked class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-8">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">代理地址</label>
+                            <input type="text" id="proxy" value="http://127.0.0.1:1236"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                            <p class="text-xs text-gray-500 mt-1">必须配置，http://nas_ip:1236（默认 http://127.0.0.1:1236）</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">302链接缓存过期时间(秒)</label>
+                            <input type="number" id="cache_expire_time" value="300"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                            <p class="text-xs text-gray-500 mt-1">默认5分钟</p>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">程序启动后立即执行任务</label>
+                            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                <span>可选，默认 False</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="running_on_start" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">文件删除监听</label>
+                            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                <span>可选，开启后删除本地文件时同步删除云盘文件，默认 False</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="watch_delete" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">平铺模式</label>
+                            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                <span>开启后强制关闭图片、nfo等文件下载(可选，默认 False)</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="flatten_mode" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧设置 -->
+                    <div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Client Id</label>
+                            <input type="text" id="client_id" value=""
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                            <p class="text-xs text-gray-500 mt-1">https://www.123pan.com/developer 注册获取</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Client Secret</label>
+                            <input type="password" id="client_secret" value=""
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                            <p class="text-xs text-gray-500 mt-1">https://www.123pan.com/developer 注册获取</p>
+                        </div>
+
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">图片文件后缀</label>
+                            <input type="text" id="image_extensions" value=".jpg,.jpeg,.png,.webp"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                            <p class="text-xs text-gray-500 mt-1">默认 .jpg, .jpeg, .png, .webp</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">下载图片名后缀</label>
+                            <input type="text" id="download_image_suffix" value=""
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                            <p class="text-xs text-gray-500 mt-1">默认留空下载全部</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">视频文件后缀</label>
+                            <input type="text" id="video_extensions"
+                                value=".mp4,.mkv,.ts,.iso"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                            <p class="text-xs text-gray-500 mt-1">默认 .mp4, .mkv, .ts, .iso</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">字幕文件后缀</label>
+                            <input type="text" id="subtitle_extensions" value=".srt,.ass,.sub"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                            <p class="text-xs text-gray-500 mt-1">默认 .srt, .ass, .sub</p>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">文件处理选项</label>
+                            <div class="space-y-3 p-4 border border-gray-200 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <span>下载 .nfo 文件</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="nfo" class="sr-only peer">
+                                        <div
+                                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span>下载字幕文件</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="subtitle" class="sr-only peer">
+                                        <div
+                                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span>下载图片文件</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="image" class="sr-only peer">
+                                        <div
+                                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">覆盖模式</label>
+                            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                <span>同名strm文件是否重新生成/下载（可选，默认 False）</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="overwrite" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">默认输出路径（不同任务请使用不同的文件夹）</label>
+                            <input type="text" id="target_dir"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
+                                placeholder="/media/...">
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">本地挂载路径前缀（302链接开启时无效）</label>
+                            <input type="text" id="path_prefix" value=""
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
+                                placeholder="/volume1/cloud/...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 固定在底部的操作按钮 -->
+            <div class="fixed bottom-6 right-6 flex space-x-3 z-40">
+                <button id="reset-float-btn"
+                    class="w-14 h-14 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-200 transition-colors duration-200 btn-hover">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M12.079 2.25c-4.794 0-8.734 3.663-9.118 8.333H2a.75.75 0 0 0-.528 1.283l1.68 1.666a.75.75 0 0 0 1.056 0l1.68-1.666a.75.75 0 0 0-.528-1.283h-.893c.38-3.831 3.638-6.833 7.612-6.833a7.66 7.66 0 0 1 6.537 3.643a.75.75 0 1 0 1.277-.786A9.16 9.16 0 0 0 12.08 2.25m8.761 8.217a.75.75 0 0 0-1.054 0L18.1 12.133a.75.75 0 0 0 .527 1.284h.899c-.382 3.83-3.651 6.833-7.644 6.833a7.7 7.7 0 0 1-6.565-3.644a.75.75 0 1 0-1.277.788a9.2 9.2 0 0 0 7.842 4.356c4.808 0 8.765-3.66 9.15-8.333H22a.75.75 0 0 0 .527-1.284z" />
+                    </svg>
+                </button>
+                <button id="save-float-btn"
+                    class="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors duration-200 btn-hover">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path fill="currentColor" fill-rule="evenodd"
+                            d="M12.476 3.75c-2.75 0-4.964 2.2-4.964 4.897c0 .462.065.909.185 1.331c.497.144.963.36 1.383.64a.75.75 0 1 1-.827 1.25a3.54 3.54 0 0 0-1.967-.589c-1.961 0-3.536 1.57-3.536 3.486s1.575 3.485 3.536 3.485a.75.75 0 0 1 0 1.5c-2.773 0-5.036-2.224-5.036-4.985c0-2.705 2.17-4.893 4.864-4.983a6.4 6.4 0 0 1-.102-1.135c0-3.541 2.902-6.397 6.464-6.397c3.158 0 5.796 2.244 6.355 5.221c2.3.977 3.919 3.238 3.919 5.882c0 3.074-2.188 5.631-5.093 6.253a.75.75 0 0 1-.314-1.467c2.24-.48 3.907-2.446 3.907-4.786c0-2.137-1.39-3.962-3.338-4.628a5 5 0 0 0-1.626-.27c-.583 0-1.14.1-1.658.28a.75.75 0 0 1-.494-1.416a6.5 6.5 0 0 1 3.024-.305a4.96 4.96 0 0 0-4.682-3.264m2.041 13.707c.3.286.312.76.026 1.06l-2.857 3a.75.75 0 0 1-1.086 0l-1.143-1.2a.75.75 0 1 1 1.086-1.034l.6.63l2.314-2.43a.75.75 0 0 1 1.06-.026"
+                            clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 模态框：添加任务 -->
+    <div id="add-task-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 transform transition-all duration-300 scale-95 opacity-0"
+            id="modal-content">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold" id="modal-title">添加新任务</h3>
+                <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">任务ID</label>
+                            <input type="text" id="job_id"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
+                                placeholder="例如：国产剧">
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">根文件夹ID</label>
+                            <input type="text" id="job_root_folder_id"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
+                                placeholder="浏览器打开对应文件夹获取">
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">输出路径</label>
+                            <input type="text" id="job_target_dir"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
+                                placeholder="/media/...">
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Client Id (留空使用通用配置)</label>
+                            <input type="text" id="job_client_id" value=""
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Client Secret (留空使用通用配置)</label>
+                            <input type="password" id="job_client_secret" value=""
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">默认文件处理选项</label>
+                        <div class="space-y-3 p-4 border border-gray-200 rounded-lg mb-4">
+                            <div class="flex items-center justify-between">
+                                <span>下载字幕文件</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="job_subtitle" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>下载图片文件</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="job_image" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>下载 .nfo 文件</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="job_nfo" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>覆盖模式</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="job_overwrite" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">302链接（推荐使用）</label>
+                            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                <span>使用官方下载链接播放（默认True）</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="job_use_302_url" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">本地挂载路径前缀（302链接开启时无效）</label>
+                            <input type="text" id="job_path_prefix" value=""
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end mt-6 space-x-3">
+                <button id="cancel-add-task"
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 btn-hover">
+                    取消
+                </button>
+                <button id="confirm-add-task"
+                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 btn-hover">
+                    确认
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div id="toast"
+        class="fixed top-6 right-0 bg-white rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 z-50 flex items-center">
+        <div id="toast-icon" class="w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-green-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                <path fill="currentColor"
+                    d="M2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8m6-7a7 7 0 1 0 0 14A7 7 0 0 0 8 1m2.854 5.854a.5.5 0 0 0-.708-.708L7.25 9.043L5.854 7.646a.5.5 0 1 0-.708.708l1.75 1.75a.5.5 0 0 0 .708 0z" />
+            </svg>
+        </div>
+        <div>
+            <h4 id="toast-title" class="font-medium text-gray-900">操作成功</h4>
+            <p id="toast-message" class="text-sm text-gray-500">配置已保存</p>
+        </div>
+        <button id="close-toast" class="ml-4 text-gray-400 hover:text-gray-600">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+
+    <script>
+        var defaultConfig = {
+            'cron': '0 1 * * *',
+            'client_id': '',
+            'client_secret': '',
+            'use_302_url': true,
+            'proxy': 'http://127.0.0.1:1236',
+            'cache_expire_time': 300,
+            'video_extensions': ['.mp4', '.mkv', '.ts', '.iso'],
+            'subtitle_extensions': ['.srt', '.ass', '.sub'],
+            'download_image_suffix': [],
+            'image_extensions': ['.jpg', '.jpeg', '.png', '.webp'],
+            'subtitle': false,
+            'image': false,
+            'nfo': false,
+            'running_on_start': false,
+            'overwrite': false,
+            'watch_delete': false,
+            'flatten_mode': false,
+            'target_dir': '',
+            'path_prefix': '',
+            'root_folder_id': '',
+            'id': '',
+            'job_list': []
+        }
+        var currentConfig = {}
+        var currentJobId = ''
+        function getConfigData() {
+            // 从服务器获取配置数据
+            fetch('/get_config')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    // 更新配置数据
+                    currentConfig = data
+                    loadDefaults()
+                    if (currentConfig.job_list.length > 0) {
+                        reloadJobTable()
+                    }
+                })
+                .catch(error => {
+                    console.error('获取配置数据失败:', error)
+                })
+        }
+
+        function reloadJobTable() {
+            document.getElementById("job_table").innerHTML = ""
+            job_tbody = ""
+            currentConfig.job_list.forEach(job => {
+                job_tbody += '<tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">' + job.id + '</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">' + job.root_folder_id + '</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">' + job.target_dir + '</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><button class="text-primary hover:text-primary/80 mr-3" onclick=editJob("' + job.id + '")>编辑 </button><button class="text-danger hover:text-danger/80" onclick=deleteJob("' + job.id + '")>删除</button></td></tr>'
+            })
+            document.getElementById("job_table").innerHTML = job_tbody
+        }
+
+        function loadConfigKey(elKey, configKey) {
+            var keyValue = currentConfig[configKey] ?? defaultConfig[configKey]
+            if (Array.isArray(keyValue)) {
+                // 判断是否是数组
+                document.getElementById(elKey).value = keyValue.join(',')
+            } else if (document.getElementById(elKey).type == 'checkbox') {
+                // 判断input是否是checkbox
+                document.getElementById(elKey).checked = keyValue
+            } else {
+                document.getElementById(elKey).value = keyValue
+            }
+
+        }
+
+        function loadJobKey(elKey, jobKey, job) {
+            var keyValue = job[jobKey] ?? currentConfig[jobKey] ?? defaultConfig[jobKey]
+            debugger
+            if (Array.isArray(keyValue)) {
+                // 判断是否是数组
+                document.getElementById(elKey).value = keyValue.join(',')
+            } else if (document.getElementById(elKey).type == 'checkbox') {
+                // 判断input是否是checkbox
+                document.getElementById(elKey).checked = keyValue
+            } else {
+                document.getElementById(elKey).value = keyValue
+            }
+        }
+
+        function loadDefaults() {
+            var keys = ['cron', 'client_id', 'client_secret', 'use_302_url', 'proxy', 'cache_expire_time', 'video_extensions', 'subtitle_extensions', 'download_image_suffix', 'image_extensions', 'subtitle', 'image', 'nfo', 'running_on_start', 'overwrite', 'watch_delete', 'flatten_mode', 'target_dir', 'path_prefix']
+            keys.forEach(key => {
+                loadConfigKey(key, key)
+            })
+        }
+
+        function loadJobInfo(jobId) {
+            saveConfigData()
+            if (jobId == null) {
+                job = currentConfig
+            } else {
+                var job = currentConfig.job_list.find(job => job.id == jobId)
+            }
+            if (job == null) {
+                job = currentConfig
+            }
+            loadJobKey('job_id', 'id', job)
+            loadJobKey('job_root_folder_id', 'root_folder_id', job)
+            loadJobKey('job_client_id', 'client_id', job)
+            loadJobKey('job_client_secret', 'client_secret', job)
+            loadJobKey('job_target_dir', 'target_dir', job)
+            loadJobKey('job_path_prefix', 'path_prefix', job)
+            loadJobKey('job_use_302_url', 'use_302_url', job)
+            loadJobKey('job_subtitle', 'subtitle', job)
+            loadJobKey('job_image', 'image', job)
+            loadJobKey('job_nfo', 'nfo', job)
+            loadJobKey('job_overwrite', 'overwrite', job)
+        }
+
+        function editJob(jobId) {
+            console.log('编辑任务:', jobId)
+            currentJobId = jobId
+            // 实现编辑逻辑
+            loadJobInfo(jobId)
+            const modal = document.getElementById('add-task-modal')
+            const modalContent = document.getElementById('modal-content')
+
+            modal.classList.remove('hidden')
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0')
+                modalContent.classList.add('scale-100', 'opacity-100')
+            }, 10)
+        }
+
+        function deleteJob(jobId) {
+            if (confirm('确定要删除这个任务吗？')) {
+                console.log('删除任务:', jobId)
+                // 实现删除逻辑
+                currentConfig.job_list = currentConfig.job_list.filter(job => job.id !== jobId)
+                reloadJobTable()
+            }
+        }
+
+        function saveConfigData() {
+            currentConfig['cron'] = document.getElementById('cron').value
+            currentConfig['client_id'] = document.getElementById('client_id').value
+            currentConfig['client_secret'] = document.getElementById('client_secret').value
+            currentConfig['use_302_url'] = document.getElementById('use_302_url').checked
+            currentConfig['proxy'] = document.getElementById('proxy').value
+            currentConfig['cache_expire_time'] = Number(document.getElementById('cache_expire_time').value)
+            currentConfig['video_extensions'] = document.getElementById('video_extensions').value.split(',')
+            currentConfig['subtitle_extensions'] = document.getElementById('subtitle_extensions').value.split(',')
+            currentConfig['download_image_suffix'] = document.getElementById('download_image_suffix').value.split(',')
+            currentConfig['image_extensions'] = document.getElementById('image_extensions').value.split(',')
+            currentConfig['subtitle'] = document.getElementById('subtitle').checked
+            currentConfig['image'] = document.getElementById('image').checked
+            currentConfig['nfo'] = document.getElementById('nfo').checked
+            currentConfig['running_on_start'] = document.getElementById('running_on_start').checked
+            currentConfig['overwrite'] = document.getElementById('overwrite').checked
+            currentConfig['watch_delete'] = document.getElementById('watch_delete').checked
+            currentConfig['flatten_mode'] = document.getElementById('flatten_mode').checked
+        }
+
+        // 浮动保存按钮
+        document.getElementById('save-float-btn').addEventListener('click', function () {
+            saveConfigData()
+            fetch('/save_config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(currentConfig)
+            }).then(response => response.json()).then(data => {
+                console.log('Success:', data)
+                showToast('success', '保存成功', '配置已成功保存')
+            }).catch(error => {
+                console.error('Error:', error)
+                showToast('error', '保存失败', '配置保存失败')
+            })
+        })
+
+
+        // 浮动重置按钮
+        document.getElementById('reset-float-btn').addEventListener('click', function () {
+            if (confirm('确定要重置所有配置为默认值吗？')) {
+                // 这里可以添加重置逻辑
+                getConfigData()
+                showToast('info', '重置成功', '配置已恢复默认值')
+            }
+        })
+
+        // 添加任务按钮
+        document.getElementById('add-task-btn').addEventListener('click', function () {
+            const modal = document.getElementById('add-task-modal')
+            const modalContent = document.getElementById('modal-content')
+            loadJobInfo(null)
+            modal.classList.remove('hidden')
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0')
+                modalContent.classList.add('scale-100', 'opacity-100')
+            }, 10)
+        })
+
+        // 关闭模态框
+        document.getElementById('close-modal').addEventListener('click', closeModal)
+        document.getElementById('cancel-add-task').addEventListener('click', closeModal)
+
+        function closeModal() {
+            const modal = document.getElementById('add-task-modal')
+            const modalContent = document.getElementById('modal-content')
+
+            modalContent.classList.remove('scale-100', 'opacity-100')
+            modalContent.classList.add('scale-95', 'opacity-0')
+
+            setTimeout(() => {
+                modal.classList.add('hidden')
+            }, 300)
+        }
+
+        function useJobConfig(job_key, config_key) {
+            return document.getElementById(job_key).value != '' && document.getElementById(job_key).value != currentConfig[config_key]
+        }
+
+        function useJobBooleanConfig(job_key, config_key) {
+            return document.getElementById(job_key).checked != '' && document.getElementById(job_key).checked != currentConfig[config_key]
+        }
+
+        function updateJobInfo(job) {
+            job['id'] = document.getElementById('job_id').value
+            job['root_folder_id'] = document.getElementById('job_root_folder_id').value
+            job['target_dir'] = document.getElementById('job_target_dir').value
+            job['path_prefix'] = document.getElementById('job_path_prefix').value
+            if (useJobConfig('job_client_id', 'client_id')) {
+                job['client_id'] = document.getElementById('job_client_id').value
+            }
+            if (useJobConfig('job_client_secret', 'client_secret')) {
+                job['client_secret'] = document.getElementById('job_client_secret').value
+            }
+            if (useJobBooleanConfig('job_use_302_url', 'use_302_url')) {
+                job['use_302_url'] = document.getElementById('job_use_302_url').checked
+            }
+            if (useJobBooleanConfig('job_subtitle', 'subtitle')) {
+                job['subtitle'] = document.getElementById('job_subtitle').checked
+            }
+            if (useJobBooleanConfig('job_image', 'image')) {
+                job['image'] = document.getElementById('job_image').checked
+            }
+            if (useJobBooleanConfig('job_nfo', 'nfo')) {
+                job['nfo'] = document.getElementById('job_nfo').checked
+            }
+            if (useJobBooleanConfig('job_overwrite', 'overwrite')) {
+                job['overwrite'] = document.getElementById('job_overwrite').checked
+            }
+            return job
+        }
+
+        // 确认添加任务
+        document.getElementById('confirm-add-task').addEventListener('click', function () {
+            // 这里可以添加添加任务的逻辑
+            var job_id = document.getElementById('job_id').value
+            if (job_id != '') {
+                var job = currentConfig.job_list.find(job => job.id == job_id)
+                if (job == null) {
+                    job = {
+                        'id': job_id,
+                        'root_folder_id': document.getElementById('job_root_folder_id').value,
+                        'target_dir': document.getElementById('job_target_dir').value,
+                        'path_prefix': document.getElementById('job_path_prefix').value,
+                        'use_302_url': document.getElementById('job_use_302_url').checked,
+                        'subtitle': document.getElementById('job_subtitle').checked,
+                        'image': document.getElementById('job_image').checked,
+                        'nfo': document.getElementById('job_nfo').checked,
+                        'overwrite': document.getElementById('job_overwrite').checked,
+                    }
+                    job = updateJobInfo(job)
+                    currentConfig.job_list.push(job)
+                    if (currentJobId != '' && currentJobId != job_id) {
+                        currentConfig.job_list = currentConfig.job_list.filter(job => job.id != currentJobId)
+                    }
+                } else {
+                    currentConfig.job_list[currentConfig.job_list.indexOf(job)] = updateJobInfo(job)
+                }
+                reloadJobTable()
+            }
+            closeModal()
+            showToast('success', '保存成功', '任务已保存')
+        })
+
+        // 关闭提示消息
+        document.getElementById('close-toast').addEventListener('click', function () {
+            const toast = document.getElementById('toast')
+            toast.classList.remove('translate-x-0')
+            toast.classList.add('translate-x-full')
+        })
+
+        // 显示提示消息
+        function showToast(type, title, message) {
+            const toast = document.getElementById('toast')
+            const toastIcon = document.getElementById('toast-icon')
+            const toastTitle = document.getElementById('toast-title')
+            const toastMessage = document.getElementById('toast-message')
+
+            // 设置提示类型
+            if (type === 'success') {
+                toastIcon.className = 'w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-green-100'
+                toastIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="#52C41A" d="M2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8m6-7a7 7 0 1 0 0 14A7 7 0 0 0 8 1m2.854 5.854a.5.5 0 0 0-.708-.708L7.25 9.043L5.854 7.646a.5.5 0 1 0-.708.708l1.75 1.75a.5.5 0 0 0 .708 0z" /></svg>'
+            } else if (type === 'error') {
+                toastIcon.className = 'w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-red-100'
+                toastIcon.innerHTML = '<i class="fa fa-times text-red-500"></i>'
+            } else if (type === 'warning') {
+                toastIcon.className = 'w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-yellow-100'
+                toastIcon.innerHTML = '<i class="fa fa-exclamation text-yellow-500"></i>'
+            } else if (type === 'info') {
+                toastIcon.className = 'w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-blue-100'
+                toastIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#165DFF" d="M12 17.75a.75.75 0 0 0 .75-.75v-6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75M12 7a1 1 0 1 1 0 2a1 1 0 0 1 0-2"/><path fill="#165DFF" fill-rule="evenodd" d="M1.25 12C1.25 6.063 6.063 1.25 12 1.25S22.75 6.063 22.75 12S17.937 22.75 12 22.75S1.25 17.937 1.25 12M12 2.75a9.25 9.25 0 1 0 0 18.5a9.25 9.25 0 0 0 0-18.5" clip-rule="evenodd"/></svg>'
+            }
+
+            // 设置提示内容
+            toastTitle.textContent = title
+            toastMessage.textContent = message
+
+            // 显示提示
+            toast.classList.remove('translate-x-full')
+            toast.classList.add('translate-x-0')
+
+            // 3秒后自动关闭
+            setTimeout(() => {
+                toast.classList.remove('translate-x-0')
+                toast.classList.add('translate-x-full')
+            }, 3000)
+        }
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault()
+
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                })
+            })
+        })
+
+        // 页面加载完成后获取配置数据
+        document.addEventListener('DOMContentLoaded', function () {
+            getConfigData()
+        })
+    </script>
+</body>
+
+</html>
