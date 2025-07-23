@@ -541,7 +541,6 @@
 
         function loadJobKey(elKey, jobKey, job) {
             var keyValue = job[jobKey] ?? currentConfig[jobKey] ?? defaultConfig[jobKey]
-            debugger
             if (Array.isArray(keyValue)) {
                 // 判断是否是数组
                 document.getElementById(elKey).value = keyValue.join(',')
@@ -696,27 +695,13 @@
             job['root_folder_id'] = document.getElementById('job_root_folder_id').value
             job['target_dir'] = document.getElementById('job_target_dir').value
             job['path_prefix'] = document.getElementById('job_path_prefix').value
-            if (useJobConfig('job_client_id', 'client_id')) {
-                job['client_id'] = document.getElementById('job_client_id').value
-            }
-            if (useJobConfig('job_client_secret', 'client_secret')) {
-                job['client_secret'] = document.getElementById('job_client_secret').value
-            }
-            if (useJobBooleanConfig('job_use_302_url', 'use_302_url')) {
-                job['use_302_url'] = document.getElementById('job_use_302_url').checked
-            }
-            if (useJobBooleanConfig('job_subtitle', 'subtitle')) {
-                job['subtitle'] = document.getElementById('job_subtitle').checked
-            }
-            if (useJobBooleanConfig('job_image', 'image')) {
-                job['image'] = document.getElementById('job_image').checked
-            }
-            if (useJobBooleanConfig('job_nfo', 'nfo')) {
-                job['nfo'] = document.getElementById('job_nfo').checked
-            }
-            if (useJobBooleanConfig('job_overwrite', 'overwrite')) {
-                job['overwrite'] = document.getElementById('job_overwrite').checked
-            }
+            job['client_id'] = document.getElementById('job_client_id').value
+            job['client_secret'] = document.getElementById('job_client_secret').value
+            job['use_302_url'] = document.getElementById('job_use_302_url').checked
+            job['subtitle'] = document.getElementById('job_subtitle').checked
+            job['image'] = document.getElementById('job_image').checked
+            job['nfo'] = document.getElementById('job_nfo').checked
+            job['overwrite'] = document.getElementById('job_overwrite').checked
             return job
         }
 
