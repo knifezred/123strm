@@ -688,7 +688,7 @@
         }
 
         function useJobBooleanConfig(job_key, config_key) {
-            return document.getElementById(job_key).checked != '' && document.getElementById(job_key).checked != currentConfig[config_key]
+            return document.getElementById(job_key).checked != currentConfig[config_key]
         }
 
         function updateJobInfo(job) {
