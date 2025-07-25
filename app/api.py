@@ -128,13 +128,14 @@ def http_123_request(job_id, payload="", path="", method="GET"):
         response = json.loads(data.decode("utf-8"))
         if response["code"] != 0:
             if response["code"] == 401:
-                logger.warning(job_id + "\n" + response["message"])
                 clean_local_access_token(job_id)
             else:
-                logger.warning(job_id + "\n" + response["message"])
-                raise HTTPException(
-                    status_code=response["code"], detail=response["message"]
-                )
+                # 操作频繁，暂停30秒
+                time.sleep(30)
+            logger.error(job_id + "\n" + response["message"])
+            raise HTTPException(
+                status_code=response["code"], detail=response["message"]
+            )
         return response
     finally:
         if conn is not None:
@@ -223,8 +224,14 @@ def heartbeat(job_id):
                 )
                 # clean_local_access_token(job_id)
     except Exception as e:
-        clean_local_access_token(job_id)
-        logger.warning(f"{job_id} 心跳检测异常，清除缓存文件。error:{e}")
+        if isinstance(e, HTTPException):
+            if e.status_code == 401:
+                clean_local_access_token(job_id)
+                logger.warning(f"{job_id} 心跳检测失败, 清除缓存文件。error:{e}")
+                new_token = get_access_token(job_id)
+                logger.warning(f"{job_id} 重新获取token: {new_token}")
+            else:
+                logger.error(f"{job_id} 心跳检测异常, error:{e}")
 
 
 def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, max_retries=0):
