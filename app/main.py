@@ -29,6 +29,7 @@ from app.api import (
 from app.api import local302Api
 
 from app.utils import (
+    load_config,
     get_config_val,
     download_file,
     is_filetype_downloadable,
