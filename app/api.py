@@ -21,7 +21,6 @@ from fastapi.responses import RedirectResponse, FileResponse
 
 from app.utils import (
     get_config_val,
-    clean_local_access_token,
     config_folder,
     load_config,
 )
@@ -95,6 +94,12 @@ class ConnectionPool:
 # 全局连接池实例
 api_pool = ConnectionPool("open-api.123pan.com")
 
+# 每个job_id对应的缓存token设置
+global_job_cache_tokens = {}
+
+# 默认缓存状态
+default_use_cache_token = True
+
 
 def http_123_request(job_id, payload="", path="", method="GET"):
     """
@@ -128,7 +133,7 @@ def http_123_request(job_id, payload="", path="", method="GET"):
         response = json.loads(data.decode("utf-8"))
         if response["code"] != 0:
             if response["code"] == 401:
-                clean_local_access_token(job_id)
+                global_job_cache_tokens[job_id] = False
             else:
                 # 操作频繁，暂停30秒
                 time.sleep(30)
@@ -173,31 +178,43 @@ def get_access_token(job_id):
     # 根据client_id生成缓存文件名
     cache_file = os.path.join(config_folder, f"token_cache_{client_id}.json")
     # 尝试从缓存文件读取token信息
-    try:
-        current_time = datetime.now().replace(tzinfo=None)
-        with open(cache_file, "r") as f:
-            cache = json.load(f)
-        expire_time = datetime.fromisoformat(cache["expiredAt"]).replace(tzinfo=None)
-        if expire_time > current_time + timedelta(days=1):
-            return cache["accessToken"]
-        else:
-            # 提前1天清除缓存
-            if os.path.exists(cache_file):
-                os.remove(cache_file)
-    except (FileNotFoundError, json.JSONDecodeError, KeyError):
-        pass
+    # 检查job_id是否在缓存设置中，不在则使用默认值
+    use_cache = global_job_cache_tokens.get(job_id, default_use_cache_token)
+    if use_cache:
+        try:
+            current_time = datetime.now().replace(tzinfo=None)
+            with open(cache_file, "r") as f:
+                cache = json.load(f)
+            expire_time = datetime.fromisoformat(cache["expiredAt"]).replace(
+                tzinfo=None
+            )
+            if expire_time > current_time + timedelta(days=1):
+                return cache["accessToken"]
+            else:
+                # 提前1天清除缓存
+                if os.path.exists(cache_file):
+                    os.remove(cache_file)
+        except (FileNotFoundError, json.JSONDecodeError, KeyError):
+            pass
     # 获取新token
     client_secret = get_config_val("client_secret", job_id=job_id)
     token_response = auth_access_token(client_id, client_secret)
     # 保存token到缓存文件
-    with open(cache_file, "w") as f:
-        json.dump(
-            {
-                "accessToken": token_response["data"]["accessToken"],
-                "expiredAt": token_response["data"]["expiredAt"],
-            },
-            f,
-        )
+    try:
+        with open(cache_file, "w") as f:
+            json.dump(
+                {
+                    "accessToken": token_response["data"]["accessToken"],
+                    "expiredAt": token_response["data"]["expiredAt"],
+                },
+                f,
+            )
+    except IOError as e:
+        logger.error(f"写入缓存文件 {cache_file} 失败: {str(e)}")
+        # 文件操作失败时标记为不使用缓存，强制下次获取新token
+        global_job_cache_tokens[job_id] = False
+    # 设置该job_id的缓存状态为True
+    global_job_cache_tokens[job_id] = True
     return token_response["data"]["accessToken"]
 
 
@@ -219,19 +236,14 @@ def heartbeat(job_id):
                 + get_config_val("cache_expire_time", job_id, default_val=300),
             }
             if jsonData["code"] != 0:
-                logger.warning(
-                    f"{job_id} 心跳检测失败 {jsonData["code"]}:{jsonData["message"]}"
+                # 抛出异常以便调用者处理
+                raise HTTPException(
+                    status_code=jsonData["code"], detail=jsonData["message"]
                 )
-                # clean_local_access_token(job_id)
     except Exception as e:
         if isinstance(e, HTTPException):
-            if e.status_code == 401:
-                clean_local_access_token(job_id)
-                logger.warning(f"{job_id} 心跳检测失败, 清除缓存文件。error:{e}")
-                new_token = get_access_token(job_id)
-                logger.warning(f"{job_id} 重新获取token: {new_token}")
-            else:
-                logger.error(f"{job_id} 心跳检测异常, error:{e}")
+            global_job_cache_tokens[job_id] = False
+            logger.warning(f"{job_id} 心跳检测失败, 禁用缓存文件。error:{e}")
 
 
 def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, max_retries=0):

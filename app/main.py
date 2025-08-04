@@ -273,16 +273,18 @@ async def run_scheduler():
     """
     运行定时任务调度器
     """
+    global config
     # 开启即运行
     if get_config_val("running_on_start", default_val=False):
         job()
     try:
         schedule_job()
         while True:
+            config = load_config()
             schedule.run_pending()
             # 清理过期缓存
             clean_expired_cache()
-            await asyncio.sleep(10)
+            await asyncio.sleep(19)
     except Exception as e:
         logger.error(f"运行异常: {e}")
         monitor.stop_monitoring()

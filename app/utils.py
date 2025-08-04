@@ -154,17 +154,3 @@ def get_file_id(file_path, job_id=None):
         if file_path in cache_data:
             return cache_data[file_path]
     return None
-
-
-def clean_local_access_token(job_id):
-    """
-    清理指定任务的本地缓存访问令牌
-    :param job_id: 任务ID
-    """
-    client_id = get_config_val("client_id", job_id)
-    # 根据client_id生成缓存文件名
-    cache_file = os.path.join(config_folder, f"token_cache_{client_id}.json")
-    logger.info(f"清理任务 {job_id} 本地缓存路径 {cache_file}")
-    if os.path.exists(cache_file):
-        os.remove(cache_file)
-        logger.info(f"清除失效token文件成功: {cache_file}")
