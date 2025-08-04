@@ -67,7 +67,6 @@ def download_with_log(file_type, target_path, file_info, job_id):
     if not os.path.exists(target_file):
         download_url = get_file_download_info(file_info["fileId"], job_id)
         download_file(download_url, target_file)
-        logger.info(f"下载成功: {target_file}")
 
 
 def traverse_folders(job_id, parent_id=0, indent=0, parent_path=""):

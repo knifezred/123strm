@@ -96,13 +96,14 @@ def download_file(url, save_path):
             with open(save_path, "wb") as file:
                 for chunk in response.iter_content(chunk_size=8192):
                     file.write(chunk)
+            logger.info(f"下载成功: {save_path}")
             return True
         except requests.RequestException as e:
             retry_count += 1
             if retry_count == max_retries:
                 logger.info(f"下载文件失败，已达最大重试次数{max_retries}: {e}")
                 return False
-            logger.info(f"下载文件出错(第{retry_count}次重试): {e}")
+            logger.info(f"下载失败: {save_path}, 第{retry_count}次重试, 错误信息: {e}")
             time.sleep(1)  # 重试前等待1秒
 
 

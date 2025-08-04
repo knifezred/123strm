@@ -32,11 +32,15 @@ git clone <仓库地址>
 pip install -r requirements.txt
 # 3. 运行脚本
 python app/amin.py
+# windows运行命令
+python -m app.main
+# 4. 访问可视化配置页面, 访问地址：http://127.0.0.1:1236
 ```
 
 ### 自行构建 docker 镜像
 
 ```bash
+docker build -t 123strm . && docker save -o 123strm.tar 123strm && gzip 123strm.tar
 # 生成docker镜像
 docker build -t 123strm .
 # 生成本地镜像包
