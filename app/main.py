@@ -28,6 +28,7 @@ from app.api import (
 
 from app.api import local302Api
 
+
 from app.utils import (
     load_config,
     get_config_val,
@@ -51,6 +52,23 @@ video_extensions = []
 subtitle_extensions = []
 # 全局网盘文件列表
 cloud_files = set()
+
+
+@local302Api.post("/scrape_directory")
+async def scrape_directory(query: dict):
+    """
+    刮削目标文件夹
+    :param dep_job_id: 任务ID
+    :param parent_id: 文件夹ID
+    :param parent_path: 目标文件夹路径
+    :return: 文件ID列表
+    """
+    # 使用asyncio.to_thread在单独的线程中运行同步函数，避免阻塞事件循环
+    result = await asyncio.to_thread(
+        run_job_once, query["dep_job_id"], query["parent_id"], query["parent_path"]
+    )
+    # 返回适当的响应
+    return {"success": True, "message": "刮削任务已完成", "result": result}
 
 
 def download_with_log(file_type, target_path, file_info, job_id):
@@ -289,6 +307,65 @@ async def run_scheduler():
         logger.error(f"运行异常: {e}")
         monitor.stop_monitoring()
         raise e
+
+
+def run_job_once(job_id: str, root_folder_id: str, parent_path: str):
+    """
+    运行一次任务
+    :param job_id: 任务ID
+    :param target_dir: 目标目录
+    :param root_folder_id: 根文件夹ID
+    :return:
+    """
+    global image_extensions
+    global video_extensions
+    global subtitle_extensions
+    global download_image_suffix
+    # 确保使用正确时区
+    now = datetime.now(pytz.timezone("Asia/Shanghai"))
+    logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 开始执行任务")
+    # 检查配置中是否存在 job_list
+    if "job_list" in config:
+        # 遍历 job_list 中的每个任务
+        for job in config["job_list"]:
+            if job["id"] == job_id:
+                job_id = job["id"]
+                logger.info(f"正在处理任务: {job_id}")
+                image_extensions = get_config_val(
+                    "image_extensions",
+                    job_id=job_id,
+                    default_val=[".jpg", ".jpeg", ".png", ".webp"],
+                )
+                video_extensions = get_config_val(
+                    "video_extensions",
+                    job_id=job_id,
+                    default_val=[".mp4", ".mkv", ".ts", ".iso"],
+                )
+                subtitle_extensions = get_config_val(
+                    "subtitle_extensions",
+                    job_id=job_id,
+                    default_val=[".srt", ".ass", ".sub"],
+                )
+                download_image_suffix = get_config_val(
+                    "download_image_suffix",
+                    job_id=job_id,
+                    default_val=[],
+                )
+                # 清空云盘文件列表
+                clean_cloud_files()
+                # 运行任务
+                traverse_folders(
+                    job_id, parent_id=root_folder_id, parent_path=parent_path
+                )
+                # 遍历完成后清理过期文件和空文件夹
+                save_file_ids(cloud_files, job_id)
+                # 清理本地文件
+                local_path = os.path.join(
+                    get_config_val("target_dir", job_id), parent_path
+                )
+                clean_local_files(local_path)
+    logger.info(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 任务执行完成")
+    return "ok"
 
 
 def schedule_job():
