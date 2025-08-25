@@ -61,7 +61,7 @@ gzip 123strm.tar
 ```yml
 services:
   autofilm:
-    image: 123strm:latest
+    image: knifez/123strm:latest
     container_name: 123strm
     network_mode: host
     volumes:
