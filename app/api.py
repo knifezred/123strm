@@ -7,26 +7,23 @@ import http.client
 import json
 import yaml
 import os
-import requests
 import time
 import shutil
-import schedule
 import threading
 import urllib.parse
-from croniter import croniter
+import requests
 from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException
-from fastapi import Query
 from fastapi.responses import RedirectResponse, FileResponse
+
 
 from app.utils import (
     get_config_val,
     config_folder,
     load_config,
+    calculate_chunk_md5,
+    read_file_chunks,
 )
-
-# 添加时区设置
-import pytz
 
 from app import logger
 
@@ -344,7 +341,185 @@ def delete_file_by_id(file_id, job_id):
             f"删除云盘文件失败: {job_id} - {file_id} -{response["code"]}: {response["message"]}"
         )
 
+# 创建文件上传信息
+def upload_file_v2_create(parent_file_id,filename,etag,size,duplicate,containDir, job_id, max_retries=3):
+    """
+    创建文件上传信息
+    :param parent_file_id: 父文件夹ID
+    :param filename: 文件名
+    :param etag: 文件ETAG
+    :param size: 文件大小
+    :param duplicate: 是否允许重复
+    :param containDir: 是否包含目录
+    :param job_id: 任务ID
+    :return: 上传信息JSON数据
+    """
+    try:
+        payload = json.dumps({
+            "parentFileID": parent_file_id,
+            "filename": filename,
+            "etag": etag,
+            "size": size,
+            "duplicate": duplicate,
+            "containDir": containDir
+        })
+        response = http_123_request(
+            job_id, payload=payload, path=f"/upload/v2/file/create", method="POST"
+        )
+        return response
+    except:
+        if max_retries < 3:
+            time.sleep(5)
+            max_retries = max_retries + 1
+            logger.info(f"创建文件上传信息失败: {filename}, 重试{max_retries}...")
+            return upload_file_v2_create(parent_file_id,filename,etag,size,duplicate,containDir, job_id, max_retries)
+        else:
+            logger.info(f"创建文件上传信息失败: {filename}")
 
+
+
+def upload_file_v2_slice(file_name: str, slice_no: str, chunk: bytes, upload_id: str,url: str, job_id: str):
+    """上传文件分片到123云盘
+    
+    Args:
+        file_path: 文件路径
+        file_name: 文件名
+        slice_no: 分片序号
+        chunk: 分片数据
+        upload_id: 上传ID
+        job_id: 任务ID
+    
+    Returns:
+        上传响应JSON数据
+    """
+    
+    # 获取访问令牌
+    access_token = get_access_token(job_id)
+    
+    # 计算分片MD5
+    slice_md5 = calculate_chunk_md5(chunk)
+    
+    # 准备请求头
+    headers = {
+        "Platform": "open_platform",
+        "Authorization": f"Bearer {access_token}",
+    }
+    
+    # 记录请求信息用于调试
+    logger.info(f"分片大小: {len(chunk)} bytes, MD5: {slice_md5}")
+    
+    # 准备请求数据 - 尝试调整字段名以匹配服务器期望的格式
+    files = {
+        'slice': (os.path.basename(file_name), chunk, 'application/octet-stream')
+    }
+    data = {
+        "preuploadID": upload_id,
+        "sliceNo": slice_no,
+        "sliceMD5": slice_md5,
+        "sliceSize": str(len(chunk))
+    }
+    
+    # 发送请求，增加超时设置
+    try:
+        response = requests.post(url, headers=headers, files=files, data=data, timeout=30)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"请求异常: {str(e)}")
+        return {'code': 999, 'message': f'Request failed: {str(e)}'}
+    # 错误处理：检查响应是否有效
+    try:
+        # 首先检查响应状态码
+        response.raise_for_status()
+        # 尝试解析JSON响应
+        if response.text.strip():
+            return response.json()
+        else:
+            # 响应内容为空
+            return {'code': 1, 'message': 'Empty response from server'}
+    except requests.exceptions.HTTPError as e:
+        # HTTP错误
+        return {'code': response.status_code, 'message': f'HTTP Error: {str(e)}'}
+    except ValueError:
+        # JSON解析错误
+        return {'code': 2, 'message': f'Invalid JSON response: {response.text[:100]}...'}
+
+# 完整的分片上传流程
+def complete_multipart_upload(file_path: str, file_name: str,upload_info: dict, job_id: str):
+    """执行完整的分片上传流程
+    
+    Args:
+        file_path: 文件路径
+        file_name: 文件名
+        upload_info: 上传信息字典，包含preuploadID等
+        job_id: 任务ID
+    
+    Returns:
+        最终上传结果
+    """
+    # 参数验证和错误处理
+    try:
+        # 获取必要的上传信息
+        preupload_id = upload_info.get('preuploadID')
+        if not preupload_id:
+            return {'code': 3, 'message': 'Missing preuploadID in upload_info'}
+        
+        # 获取分片大小，默认为4MB
+        slice_size = upload_info.get('sliceSize', 4 * 1024 * 1024)
+        try:
+            slice_size = int(slice_size)
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid sliceSize: {slice_size}, using default 4MB")
+            slice_size = 4 * 1024 * 1024
+        
+        # 获取上传服务器地址
+        servers = upload_info.get('servers', [])
+        if not servers:
+            return {'code': 4, 'message': 'No upload servers available'}
+        
+        upload_server = servers[0]
+        
+        # 读取文件分片并逐个上传
+        for i, chunk in enumerate(read_file_chunks(file_path, chunk_size=slice_size)):
+            slice_no = str(i + 1)  # 分片序号从1开始
+            url = f"{upload_server}/upload/v2/file/slice"
+            
+            # 记录上传前日志
+            logger.info(f"开始上传分片 {slice_no}，大小: {len(chunk)} bytes")
+            
+            response = upload_file_v2_slice(
+                file_name=file_name,
+                slice_no=slice_no,
+                chunk=chunk,
+                upload_id=preupload_id,
+                url=url,
+                job_id=job_id
+            )
+            
+            # 检查上传是否成功
+            if response.get('code') != 0:
+                error_msg = response.get('message', 'Unknown error')
+                logger.error(f"分片 {slice_no} 上传失败: {error_msg}")
+                return {
+                    'code': response.get('code', 5),
+                    'message': f"分片 {slice_no} 上传失败: {error_msg}"
+                }
+            
+        # 所有分片上传完成
+        logger.info(f"文件 {file_name} 所有分片上传成功")
+        return {
+            'code': 0,
+            'message': '所有分片上传成功',
+            'data': {
+                'upload_id': preupload_id
+            }
+        }
+        
+    except Exception as e:
+        # 捕获所有其他异常
+        logger.error(f"分片上传过程中发生错误: {str(e)}")
+        return {
+            'code': 999,
+            'message': f"Upload process failed: {str(e)}"
+        }
 ###############API#############
 
 # 文件下载URL缓存 (存储格式: {file_id: {'url': url, 'expire_time': timestamp}})

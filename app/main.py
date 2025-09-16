@@ -1,16 +1,10 @@
-import http.client
-import json
-import yaml
 import os
-import requests
 import time
 import schedule
-import threading
 import urllib.parse
+import hashlib
 from croniter import croniter
 from datetime import datetime
-import aiohttp
-import aiofiles
 import asyncio
 import uvicorn
 
@@ -18,12 +12,13 @@ from app import __version__
 from app import logger, config
 
 from app.api import (
-    get_access_token,
     get_file_download_info,
     get_file_list,
     get_file_info,
     heartbeat,
     clean_download_url_cache,
+    upload_file_v2_create,
+    complete_multipart_upload,
 )
 
 from app.api import local302Api
@@ -69,6 +64,66 @@ async def scrape_directory(query: dict):
     )
     # 返回适当的响应
     return {"success": True, "message": "刮削任务已完成", "result": result}
+
+@local302Api.post("/upload_directory")
+async def upload_directory(query: dict):
+    """
+    上传目标文件夹
+    :param dep_job_id: 任务ID
+    :param folder_path: 文件夹路径
+    :param parent_id: 目标文件夹ID
+    :return: 上传结果
+    """
+    result='ok'
+
+    # 遍历文件夹所有文件
+    for root, dirs, files in os.walk(query["folder_path"]):
+        for file in files:
+            file_path = os.path.join(root, file)
+            file_size = os.path.getsize(file_path)
+            file_etag = hashlib.md5(open(file_path, "rb").read()).hexdigest()
+            file_name = file_path.replace(query["folder_path"],'')
+            logger.info(f"File: {file}, Path: {file_path}, Size: {file_size}, MD5: {file_etag}")
+            upload_info = upload_file_v2_create(query["parent_id"],file_name,file_etag,file_size,1,True,query["dep_job_id"])
+            logger.info(f"上传文件信息: {upload_info}")
+            if upload_info["data"]["reuse"]:
+                logger.info(f"文件秒传成功: {file} - {upload_info['data']['fileID']}")
+                # 秒传成功，删除本地文件
+                os.remove(file_path)
+                logger.info(f"文件秒传成功，本地文件已删除: {file_path}")
+            else:
+                logger.info(f"文件秒传失败，开始分片上传: {file}")
+                # 获取上传ID
+                upload_id = upload_info["data"].get("preuploadID", "")
+                if upload_id:
+                    # 执行分片上传
+                    slice_result = complete_multipart_upload(
+                        file_path=file_path,
+                        file_name=file_name,
+                        upload_info=upload_info["data"],
+                        job_id=query["dep_job_id"]
+                    )
+                    logger.info(f"分片上传结果: {slice_result}")
+                    if slice_result.get('code') == 0:
+                        logger.info(f"文件分片上传成功: {file}")
+                        # 上传成功，删除本地文件
+                        os.remove(file_path)
+                        logger.info(f"文件分片上传成功，本地文件已删除: {file_path}")
+                else:
+                    logger.error(f"无法获取上传ID，分片上传失败: {file}")
+                
+    # 删除空文件夹
+    for root, dirs, files in os.walk(query["folder_path"]):
+        for dir in dirs:
+            dir_path = os.path.join(root, dir)
+            try:
+                if not os.listdir(dir_path):
+                    os.rmdir(dir_path)
+                    logger.info(f"删除空文件夹: {dir_path}")
+            except OSError:
+                pass
+    # 返回适当的响应
+    return {"success": True, "message": "上传任务已完成", "result": result}
 
 
 def download_with_log(file_type, target_path, file_info, job_id):

@@ -9,27 +9,53 @@ import yaml
 import os
 import requests
 import time
-import schedule
-import threading
-from croniter import croniter
-from datetime import datetime
-from typing import Any, Optional
-
+import hashlib
+from typing import Any, Optional, Generator
 
 config = None
 # 开发时使用 config/ 相对定位
-config_folder = "/config/"
+config_folder = "config/"
 
 
-def load_config() -> dict:
+# 读取文件分片
+def read_file_chunks(file_path: str, chunk_size: int = 4 * 1024 * 1024) -> Generator[bytes, None, None]:
+    """读取文件的分片数据
+    
+    Args:
+        file_path: 文件路径
+        chunk_size: 分片大小，默认4MB
+    
+    Yields:
+        文件分片数据
     """
-    从config.yml加载配置信息
-    返回: 包含配置信息的字典
+    with open(file_path, "rb") as f:
+        while True:
+            chunk = f.read(chunk_size)
+            if not chunk:
+                break
+            yield chunk
+
+# 计算文件分片的MD5
+def calculate_chunk_md5(chunk: bytes) -> str:
+    """计算文件分片的MD5值
+    
+    Args:
+        chunk: 文件分片数据
+    
+    Returns:
+        MD5哈希值（16进制字符串）
     """
+    md5_hash = hashlib.md5()
+    md5_hash.update(chunk)
+    return md5_hash.hexdigest()
+
+# 加载配置
+def load_config(config_path: str = "config.yaml"):
     global config
-    config_path = os.path.join(config_folder, "config.yml")
-    with open(config_path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+    if config is None:
+        config_path = os.path.join(config_folder, "config.yml")
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
     return config
 
 
