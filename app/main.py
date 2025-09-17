@@ -30,6 +30,7 @@ from app.utils import (
     download_file,
     is_filetype_downloadable,
     save_file_ids,
+    calculate_file_md5,
 )
 
 from app.file_monitor import FileMonitor
@@ -81,7 +82,7 @@ async def upload_directory(query: dict):
         for file in files:
             file_path = os.path.join(root, file)
             file_size = os.path.getsize(file_path)
-            file_etag = hashlib.md5(open(file_path, "rb").read()).hexdigest()
+            file_etag = calculate_file_md5(file_path)
             file_name = file_path.replace(query["folder_path"],'')
             logger.info(f"File: {file}, Path: {file_path}, Size: {file_size}, MD5: {file_etag}")
             upload_info = upload_file_v2_create(query["parent_id"],file_name,file_etag,file_size,1,True,query["dep_job_id"])

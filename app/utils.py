@@ -18,12 +18,12 @@ config_folder = "config/"
 
 
 # 读取文件分片
-def read_file_chunks(file_path: str, chunk_size: int = 4 * 1024 * 1024) -> Generator[bytes, None, None]:
+def read_file_chunks(file_path: str, chunk_size: int = 8 * 1024 * 1024) -> Generator[bytes, None, None]:
     """读取文件的分片数据
     
     Args:
         file_path: 文件路径
-        chunk_size: 分片大小，默认4MB
+        chunk_size: 分片大小，默认8MB
     
     Yields:
         文件分片数据
@@ -47,6 +47,26 @@ def calculate_chunk_md5(chunk: bytes) -> str:
     """
     md5_hash = hashlib.md5()
     md5_hash.update(chunk)
+    return md5_hash.hexdigest()
+
+# 计算整个文件的MD5（分块处理，适合大文件）
+def calculate_file_md5(file_path: str, chunk_size: int = 8 * 1024 * 1024) -> str:
+    """计算整个文件的MD5值（分块读取，避免内存溢出）
+    
+    Args:
+        file_path: 文件路径
+        chunk_size: 读取分块大小，默认8MB
+    
+    Returns:
+        文件的MD5哈希值（16进制字符串）
+    """
+    md5_hash = hashlib.md5()
+    with open(file_path, "rb") as f:
+        while True:
+            chunk = f.read(chunk_size)
+            if not chunk:
+                break
+            md5_hash.update(chunk)
     return md5_hash.hexdigest()
 
 # 加载配置
