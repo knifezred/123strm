@@ -61,12 +61,31 @@ def calculate_file_md5(file_path: str, chunk_size: int = 8 * 1024 * 1024) -> str
         文件的MD5哈希值（16进制字符串）
     """
     md5_hash = hashlib.md5()
+    total_size = os.path.getsize(file_path)
+    processed_size = 0
+    last_log_percentage = -1
+    
+    # 只对较大文件（大于100MB）显示进度
+    show_progress = total_size > 100 * 1024 * 1024  # 100MB
+    
     with open(file_path, "rb") as f:
         while True:
             chunk = f.read(chunk_size)
             if not chunk:
                 break
             md5_hash.update(chunk)
+            processed_size += len(chunk)
+            
+            # 计算进度百分比并记录日志（每1%进度或达到100%时记录）
+            if show_progress:
+                percentage = int((processed_size / total_size) * 100)
+                if percentage % 1 == 0 and percentage != last_log_percentage:
+                    logger.info(f"文件MD5计算进度: {os.path.basename(file_path)} - {percentage}% ({processed_size // (1024*1024)}MB/{total_size // (1024*1024)}MB)")
+                    last_log_percentage = percentage
+    
+    if show_progress:
+        logger.info(f"文件MD5计算完成: {os.path.basename(file_path)} - MD5: {md5_hash.hexdigest()}")
+    
     return md5_hash.hexdigest()
 
 # 加载配置
