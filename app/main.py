@@ -107,7 +107,6 @@ async def upload_directory(query: dict):
                             upload_info=upload_info["data"],
                             job_id=query["dep_job_id"]
                         )
-                        logger.info(f"分片上传结果: {slice_result}")
                         if slice_result.get('code') == 0:
                             logger.info(f"分片上传成功: {file_path}")
                             os.remove(file_path)

@@ -83,8 +83,8 @@ def calculate_file_md5(file_path: str, chunk_size: int = 8 * 1024 * 1024) -> str
                     logger.info(f"文件MD5计算进度: {os.path.basename(file_path)} - {percentage}% ({processed_size // (1024*1024)}MB/{total_size // (1024*1024)}MB)")
                     last_log_percentage = percentage
     
-    if show_progress:
-        logger.info(f"文件MD5计算完成: {os.path.basename(file_path)} - MD5: {md5_hash.hexdigest()}")
+    # if show_progress:
+    #     logger.info(f"文件MD5计算完成: {os.path.basename(file_path)} - MD5: {md5_hash.hexdigest()}")
     
     return md5_hash.hexdigest()
 
