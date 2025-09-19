@@ -66,6 +66,11 @@ async def scrape_directory(query: dict):
     # 返回适当的响应
     return {"success": True, "message": "刮削任务已完成", "result": result}
 
+# 定义常量，避免魔法数字
+MAX_FILE_SIZE = 10 * 1024 * 1024 * 1024  # 10GB
+DEFAULT_DUPLICATE = 1
+DEFAULT_CONTAIN_DIR = True
+
 @local302Api.post("/upload_directory")
 async def upload_directory(query: dict):
     """
@@ -75,30 +80,79 @@ async def upload_directory(query: dict):
     :param parent_id: 目标文件夹ID
     :return: 上传结果
     """
-    result='ok'
-
+    # 验证输入参数
+    required_params = ["folder_path", "dep_job_id", "parent_id"]
+    for param in required_params:
+        if param not in query:
+            logger.error(f"缺少必要参数: {param}")
+            return {"success": False, "message": f"缺少必要参数: {param}", "result": None}
+    
+    folder_path = query["folder_path"]
+    if not os.path.exists(folder_path):
+        logger.error(f"文件夹不存在: {folder_path}")
+        return {"success": False, "message": f"文件夹不存在: {folder_path}", "result": None}
+    
+    result = 'ok'
+    success_count = 0
+    failed_count = 0
+    
     # 遍历文件夹所有文件
-    for root, dirs, files in os.walk(query["folder_path"]):
+    for root, dirs, files in os.walk(folder_path):
         for file in files:
             file_path = os.path.join(root, file)
-            file_size = os.path.getsize(file_path)
-            file_etag = calculate_file_md5(file_path)
-            file_name = file_path.replace(query["folder_path"],'')
-            upload_info = upload_file_v2_create(query["parent_id"],file_name,file_etag,file_size,1,True,query["dep_job_id"])
-            # logger.info(f"上传文件信息: {upload_info}")
-            if upload_info["data"]["reuse"]:
-                # 秒传成功，删除本地文件
-                os.remove(file_path)
-                logger.info(f"秒传成功，删除本地文件: {file_path}")
-            else:
-                # 获取上传ID
-                upload_id = upload_info["data"].get("preuploadID", "")
-                if upload_id:
-                    # 判断文件大小是否超过10GB
-                    if file_size > 10 * 1024 * 1024 * 1024:
+            
+            # 跳过符号链接和特殊文件
+            if not os.path.isfile(file_path):
+                logger.warning(f"跳过非文件: {file_path}")
+                continue
+            
+            try:
+                # 安全地获取文件大小
+                file_size = os.path.getsize(file_path)
+                
+                
+                # 计算文件ETAG（这对大文件可能很慢）
+                logger.info(f"正在计算文件MD5: {file_path}")
+                file_etag = calculate_file_md5(file_path)
+                
+                # 构建相对路径作为文件名
+                file_name = file_path.replace(folder_path, '', 1)  # 添加count=1避免多处替换
+                if file_name.startswith(os.sep):
+                    file_name = file_name[1:]  # 去掉开头的斜杠
+                
+                # 创建上传信息
+                logger.info(f"准备上传文件: {file_path} 到 {query['parent_id']}")
+                upload_info = upload_file_v2_create(
+                    query["parent_id"], 
+                    file_name, 
+                    file_etag, 
+                    file_size, 
+                    DEFAULT_DUPLICATE, 
+                    DEFAULT_CONTAIN_DIR, 
+                    query["dep_job_id"]
+                )
+                
+                # 防御性检查upload_info
+                if not upload_info or "data" not in upload_info:
+                    logger.error(f"创建上传信息失败，响应格式错误: {file_path}")
+                    failed_count += 1
+                    continue
+                
+                # 处理秒传逻辑
+                if upload_info["data"].get("reuse", False):
+                    # 秒传成功，删除本地文件
+                    os.remove(file_path)
+                    logger.info(f"秒传成功，删除本地文件: {file_path}")
+                    success_count += 1
+                else:
+                    # 获取上传ID
+                    upload_id = upload_info["data"].get("preuploadID", "")
+                    # 检查文件大小，非秒传情况下不上传超过10GB的文件
+                    if file_size > MAX_FILE_SIZE:
                         logger.error(f"文件大小超过10GB，禁止上传: {file_path}")
+                        failed_count += 1
                         continue
-                    else:
+                    if upload_id:
                         logger.info(f"秒传失败，开始分片上传: {file_path}")
                         # 执行分片上传
                         slice_result = complete_multipart_upload(
@@ -107,25 +161,47 @@ async def upload_directory(query: dict):
                             upload_info=upload_info["data"],
                             job_id=query["dep_job_id"]
                         )
-                        if slice_result.get('code') == 0:
+                        
+                        if slice_result and slice_result.get('code') == 0:
                             logger.info(f"分片上传成功: {file_path}")
                             os.remove(file_path)
                             logger.info(f"分片上传成功，删除本地文件: {file_path}")
-                else:
-                    logger.error(f"preuploadID获取失败: {file_path}")
-                
-    # 删除空文件夹
-    for root, dirs, files in os.walk(query["folder_path"]):
+                            success_count += 1
+                        else:
+                            error_msg = slice_result.get('message', 'Unknown error') if slice_result else '上传失败'
+                            logger.error(f"分片上传失败: {file_path}, 错误: {error_msg}")
+                            failed_count += 1
+                    else:
+                        logger.error(f"preuploadID获取失败: {file_path}")
+                        failed_count += 1
+            except Exception as e:
+                logger.error(f"处理文件时出错: {file_path}, 错误: {str(e)}")
+                failed_count += 1
+                # 继续处理下一个文件，不中断整个任务
+                continue
+    
+    # 删除空文件夹（从最深层开始删除）
+    for root, dirs, files in os.walk(folder_path, topdown=False):
         for dir in dirs:
             dir_path = os.path.join(root, dir)
             try:
                 if not os.listdir(dir_path):
                     os.rmdir(dir_path)
                     logger.info(f"删除空文件夹: {dir_path}")
-            except OSError:
-                pass
-    # 返回适当的响应
-    return {"success": True, "message": "上传任务已完成", "result": result}
+            except OSError as e:
+                logger.warning(f"删除文件夹失败: {dir_path}, 错误: {str(e)}")
+    
+    # 返回详细的结果信息
+    return {
+        "success": True,
+        "message": "上传任务已完成",
+        "result": {
+            "total_files": success_count + failed_count,
+            "success_count": success_count,
+            "failed_count": failed_count,
+            "details": result
+        }
+    }
 
 
 def download_with_log(file_type, target_path, file_info, job_id):

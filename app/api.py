@@ -342,7 +342,7 @@ def delete_file_by_id(file_id, job_id):
         )
 
 # 创建文件上传信息
-def upload_file_v2_create(parent_file_id,filename,etag,size,duplicate,containDir, job_id, max_retries=3):
+def upload_file_v2_create(parent_file_id, filename, etag, size, duplicate, contain_dir, job_id):
     """
     创建文件上传信息
     :param parent_file_id: 父文件夹ID
@@ -350,9 +350,9 @@ def upload_file_v2_create(parent_file_id,filename,etag,size,duplicate,containDir
     :param etag: 文件ETAG
     :param size: 文件大小
     :param duplicate: 是否允许重复
-    :param containDir: 是否包含目录
+    :param contain_dir: 是否包含目录
     :param job_id: 任务ID
-    :return: 上传信息JSON数据
+    :return: 上传信息JSON数据，包含code, message, data字段
     """
     try:
         payload = json.dumps({
@@ -361,20 +361,24 @@ def upload_file_v2_create(parent_file_id,filename,etag,size,duplicate,containDir
             "etag": etag,
             "size": size,
             "duplicate": duplicate,
-            "containDir": containDir
+            "containDir": contain_dir
         })
         response = http_123_request(
             job_id, payload=payload, path=f"/upload/v2/file/create", method="POST"
         )
         return response
-    except:
-        if max_retries < 3:
-            time.sleep(5)
-            max_retries = max_retries + 1
-            logger.info(f"创建文件上传信息失败: {filename}, 重试{max_retries}...")
-            return upload_file_v2_create(parent_file_id,filename,etag,size,duplicate,containDir, job_id, max_retries)
-        else:
-            logger.info(f"创建文件上传信息失败: {filename}")
+    except Exception as e:
+        # 永远记录具体错误信息，而不是模糊的"失败"二字
+        logger.error(f"创建文件上传信息失败: {filename}, 错误: {str(e)}")
+        # 返回一致的错误结构，与正常响应保持相同格式
+        return {
+            "code": 500,
+            "message": f"创建文件上传信息失败: {str(e)}",
+            "data": {
+                "reuse": False,
+                "preuploadID": ""
+            }
+        }
 
 
 
