@@ -84,34 +84,36 @@ async def upload_directory(query: dict):
             file_size = os.path.getsize(file_path)
             file_etag = calculate_file_md5(file_path)
             file_name = file_path.replace(query["folder_path"],'')
-            logger.info(f"File: {file}, Path: {file_path}, Size: {file_size}, MD5: {file_etag}")
             upload_info = upload_file_v2_create(query["parent_id"],file_name,file_etag,file_size,1,True,query["dep_job_id"])
-            logger.info(f"上传文件信息: {upload_info}")
+            # logger.info(f"上传文件信息: {upload_info}")
             if upload_info["data"]["reuse"]:
-                logger.info(f"文件秒传成功: {file} - {upload_info['data']['fileID']}")
                 # 秒传成功，删除本地文件
                 os.remove(file_path)
-                logger.info(f"文件秒传成功，本地文件已删除: {file_path}")
+                logger.info(f"秒传成功，删除本地文件: {file_path}")
             else:
-                logger.info(f"文件秒传失败，开始分片上传: {file}")
                 # 获取上传ID
                 upload_id = upload_info["data"].get("preuploadID", "")
                 if upload_id:
-                    # 执行分片上传
-                    slice_result = complete_multipart_upload(
-                        file_path=file_path,
-                        file_name=file_name,
-                        upload_info=upload_info["data"],
-                        job_id=query["dep_job_id"]
-                    )
-                    logger.info(f"分片上传结果: {slice_result}")
-                    if slice_result.get('code') == 0:
-                        logger.info(f"文件分片上传成功: {file}")
-                        # 上传成功，删除本地文件
-                        os.remove(file_path)
-                        logger.info(f"文件分片上传成功，本地文件已删除: {file_path}")
+                    # 判断文件大小是否超过10GB
+                    if file_size > 10 * 1024 * 1024 * 1024:
+                        logger.error(f"文件大小超过10GB，禁止上传: {file_path}")
+                        continue
+                    else:
+                        logger.info(f"秒传失败，开始分片上传: {file_path}")
+                        # 执行分片上传
+                        slice_result = complete_multipart_upload(
+                            file_path=file_path,
+                            file_name=file_name,
+                            upload_info=upload_info["data"],
+                            job_id=query["dep_job_id"]
+                        )
+                        logger.info(f"分片上传结果: {slice_result}")
+                        if slice_result.get('code') == 0:
+                            logger.info(f"分片上传成功: {file_path}")
+                            os.remove(file_path)
+                            logger.info(f"分片上传成功，删除本地文件: {file_path}")
                 else:
-                    logger.error(f"无法获取上传ID，分片上传失败: {file}")
+                    logger.error(f"preuploadID获取失败: {file_path}")
                 
     # 删除空文件夹
     for root, dirs, files in os.walk(query["folder_path"]):

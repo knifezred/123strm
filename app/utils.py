@@ -79,7 +79,7 @@ def calculate_file_md5(file_path: str, chunk_size: int = 8 * 1024 * 1024) -> str
             # 计算进度百分比并记录日志（每1%进度或达到100%时记录）
             if show_progress:
                 percentage = int((processed_size / total_size) * 100)
-                if percentage % 1 == 0 and percentage != last_log_percentage:
+                if percentage % 2 == 0 and percentage != last_log_percentage:
                     logger.info(f"文件MD5计算进度: {os.path.basename(file_path)} - {percentage}% ({processed_size // (1024*1024)}MB/{total_size // (1024*1024)}MB)")
                     last_log_percentage = percentage
     

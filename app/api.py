@@ -483,7 +483,7 @@ def complete_multipart_upload(file_path: str, file_name: str,upload_info: dict, 
             url = f"{upload_server}/upload/v2/file/slice"
             
             # 记录上传前日志
-            logger.info(f"开始上传分片 {slice_no}，大小: {len(chunk)} bytes")
+            logger.info(f"开始上传分片 {slice_no}，大小: {len(chunk)/1000/1000} MB")
             
             response = upload_file_v2_slice(
                 file_name=file_name,
