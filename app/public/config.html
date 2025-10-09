@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>123strm配置</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <script>
       tailwind.config = {
         theme: {
@@ -40,19 +44,13 @@
         .card-shadow {
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
-        .input-focus {
-          @apply focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-200;
-        }
-        .btn-hover {
-          @apply hover:shadow-md transition-all duration-200;
-        }
-        
-        /* 配置项容器样式 */
+        /* 统一的配置项容器样式 */
         .config-item-wrapper {
           width: 100%;
-          padding: 0.5rem 0.75rem;
-          border: 1px solid #e5e7eb;
+          padding: 0.5rem 1rem;
+          border: 1px solid #d1d5db;
           border-radius: 0.5rem;
+          font-size: 0.875rem;
           background-color: white;
           transition: all 0.2s ease;
         }
@@ -133,6 +131,12 @@
           opacity: 0.6;
           cursor: not-allowed;
         }
+        .btn-hover {
+          @apply hover:shadow-md transition-all duration-200;
+        }
+        .card-hover {
+          @apply hover:shadow-lg transition-all duration-300 hover:-translate-y-1;
+        }
       }
     </style>
   </head>
@@ -146,11 +150,20 @@
         <div class="flex items-center space-x-2">
           <h1 class="text-xl font-semibold text-gray-800">123strm</h1>
         </div>
+        <nav class="hidden md:flex items-center space-x-6">
+          <a href="/" class="text-gray-600 hover:text-primary transition-colors">首页</a>
+          <a
+            href="/config.html"
+            class="text-primary font-medium"
+          >
+            配置管理
+          </a>
+        </nav>
         <div class="flex items-center space-x-4">
           <a
-            class="p-2 rounded-full hover:bg-gray-100 transition-colors"
             href="https://www.omgx.cn/archives/1749797289692"
             target="_blank"
+            class="p-2 rounded-full hover:bg-gray-100 transition-colors"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -167,9 +180,9 @@
             </svg>
           </a>
           <a
-            class="p-2 rounded-full hover:bg-gray-100 transition-colors"
             href="https://github.com/knifezred/123strm"
             target="_blank"
+            class="p-2 rounded-full hover:bg-gray-100 transition-colors"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -188,22 +201,24 @@
     </header>
 
     <!-- 主内容区 -->
-    <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-6 pb-24">
       <div class="container mx-auto max-w-6xl">
-        <!-- 页面标题 -->
-        <!-- <div class="mb-8">
-                <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-gray-800">123strm配置</h1>
-                <p class="text-gray-500 mt-1">配置123strm相关参数和任务</p>
-            </div> -->
+        <!-- 欢迎区域 -->
+        <div class="rounded-xl bg-gradient-to-r from-primary/90 to-primary p-6 mb-8 text-white shadow-lg">
+          <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold">123strm配置</h1>
+          <p class="text-white/90 mt-2">配置123strm相关参数和任务，自定义您的媒体流媒体体验</p>
+        </div>
         <!-- 任务配置区域 -->
-        <div class="bg-white rounded-xl card-shadow p-6 mb-8">
+        <div id="task-config" class="bg-white rounded-xl card-shadow p-6 mb-8">
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold">任务配置</h2>
+            <h2 class="text-xl font-semibold flex items-center">
+              <i class="fas fa-tasks text-primary mr-2"></i> 任务配置
+            </h2>
             <button
               id="add-task-btn"
               class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 flex items-center btn-hover"
             >
-              添加任务
+              <i class="fas fa-plus mr-2"></i> 添加任务
             </button>
           </div>
 
@@ -240,408 +255,380 @@
             </table>
           </div>
         </div>
-        <!-- 刮削功能模块 -->
+
+        <!-- 配置区域 -->
         <div class="bg-white rounded-xl card-shadow p-6 mb-8">
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold">刮削指定目录</h2>
-            <button
-              id="scrape-btn"
-              class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors duration-200 flex items-center btn-hover"
-            >
-              立即刮削
-            </button>
+            <h2 class="text-xl font-semibold flex items-center">
+              <i class="fas fa-cog text-primary mr-2"></i> 系统配置
+            </h2>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >目标文件夹ID</label
-              >
-              <input
-                type="text"
-                id="scrape_folder_id"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
-                placeholder="输入要刮削的文件夹ID，必填"
-              />
-              <p class="text-xs text-gray-500 mt-1">
-                从123网盘或浏览器右键文件夹获取
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >依赖任务ID</label
-              >
-              <input
-                type="text"
-                id="scrape_dep_job_id"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
-                placeholder="输入依赖的任务ID，必填"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >输出目录路径</label
-              >
-              <input
-                type="text"
-                id="scrape_output_path"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
-                placeholder="输入输出目录路径，必填"
-              />
-              <p class="text-xs text-gray-500 mt-1">
-                例如：影视剧/系列电影，实际生成目录为：任务输出目录/影视剧/系列电影
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 上传功能模块 -->
-        <div class="bg-white rounded-xl card-shadow p-6 mb-8">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold">上传本地目录</h2>
-            <button
-              id="upload-btn"
-              class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors duration-200 flex items-center btn-hover"
-            >
-              立即上传
-            </button>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >上传文件夹路径</label
-              >
-              <input
-                type="text"
-                id="upload_folder_path"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
-                placeholder="输入要上传的文件夹路径，必填"
-              />
-              <p class="text-xs text-gray-500 mt-1">
-                本地文件夹路径，例如：/media/movies/
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >依赖任务ID</label
-              >
-              <input
-                type="text"
-                id="upload_dep_job_id"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
-                placeholder="输入依赖的任务ID，必填"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >上传网盘目录ID</label
-              >
-              <input
-                type="text"
-                id="upload_pan_path_id"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
-                placeholder="上传目录ID，留空默认上传到网盘根目录"
-              />
-              <p class="text-xs text-gray-500 mt-1">
-                从123网盘或浏览器右键文件夹获取
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 123盘配置区域 -->
-        <div class="bg-white rounded-xl card-shadow p-6 mb-8">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold">通用配置</h2>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- 左侧设置 -->
-            <div>
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >定时任务cron表达式</label
+          <div class="flex flex-col md:flex-row">
+            <!-- 左侧标签页导航 -->
+            <div class="md:w-64 flex-shrink-0 mb-6 md:mb-0 md:mr-6">
+              <div class="border rounded-lg overflow-hidden">
+                <button 
+                  class="tab-button w-full text-left px-4 py-3 font-medium text-primary bg-primary/5 border-l-4 border-primary flex items-center"
+                  data-tab="system-config"
                 >
-                <div class="flex items-center">
-                  <input
-                    type="text"
-                    id="cron"
-                    value="0 1 * * *"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
-                  />
-                </div>
-                <p class="text-xs text-gray-500 mt-1">
-                  不配置则默认为每天凌晨1点执行，为防止冲突，所有job都使用一个corn，依次生成直到全部结束
-                </p>
-              </div>
-              <div class="mb-8">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >302链接（推荐使用）</label
+                  <i class="fas fa-server mr-2 w-5 text-center"></i> 系统配置
+                </button>
+                <button 
+                  class="tab-button w-full text-left px-4 py-3 font-medium text-gray-600 hover:bg-gray-50 border-l-4 border-transparent flex items-center"
+                  data-tab="generate-config"
                 >
-                <div
-                  class="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                  <i class="fas fa-file-code mr-2 w-5 text-center"></i> 生成配置
+                </button>
+                <button 
+                  class="tab-button w-full text-left px-4 py-3 font-medium text-gray-600 hover:bg-gray-50 border-l-4 border-transparent flex items-center"
+                  data-tab="file-config"
                 >
-                  <span>使用官方下载链接播放（默认True）</span>
-                  <label
-                    class="relative inline-flex items-center cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      id="use_302_url"
-                      checked
-                      class="sr-only peer"
-                    />
-                    <div
-                      class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"
-                    ></div>
-                  </label>
-                </div>
-              </div>
-
-              <div class="mb-8">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >代理地址</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="text"
-                    id="proxy"
-                    value="http://127.0.0.1:1236"
-                    class="custom-input"
-                  />
-                </div>
-                <p class="text-xs text-gray-500 mt-1">
-                  必须配置，http://nas_ip:1236（默认 http://127.0.0.1:1236）
-                </p>
-              </div>
-
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >302链接缓存过期时间(秒)</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="number"
-                    id="cache_expire_time"
-                    value="300"
-                    class="custom-input"
-                  />
-                </div>
-                <p class="text-xs text-gray-500 mt-1">默认5分钟</p>
-              </div>
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >程序启动后立即执行任务</label
-                >
-                <div class="config-item-wrapper flex items-center justify-between">
-                  <span class="text-sm font-medium text-gray-700">可选，默认 False</span>
-                  <label class="custom-checkbox">
-                    <input
-                      type="checkbox"
-                      id="running_on_start"
-                      class="sr-only peer"
-                    />
-                    <div class="checkbox-toggle"></div>
-                  </label>
-                </div>
-              </div>
-
-              <div class="mb-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >文件删除监听</label
-                >
-                <div class="config-item-wrapper flex items-center justify-between">
-                  <span class="text-sm font-medium text-gray-700">可选，开启后删除本地文件时同步删除云盘文件，默认 False</span>
-                  <label class="custom-checkbox">
-                    <input
-                      type="checkbox"
-                      id="watch_delete"
-                      class="sr-only peer"
-                    />
-                    <div class="checkbox-toggle"></div>
-                  </label>
-                </div>
-              </div>
-
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >平铺模式</label
-                >
-                <div class="config-item-wrapper flex items-center justify-between">
-                  <span class="text-sm font-medium text-gray-700">开启后强制关闭图片、nfo等文件下载(可选，默认 False)</span>
-                  <label class="custom-checkbox">
-                    <input
-                      type="checkbox"
-                      id="flatten_mode"
-                      class="sr-only peer"
-                    />
-                    <div class="checkbox-toggle"></div>
-                  </label>
-                </div>
+                  <i class="fas fa-file mr-2 w-5 text-center"></i> 文件处理
+                </button>
               </div>
             </div>
 
-            <!-- 右侧设置 -->
-            <div>
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >Client Id</label
-                >
-                <input
-                  type="text"
-                  id="client_id"
-                  value=""
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus"
-                />
-                <p class="text-xs text-gray-500 mt-1">
-                  https://www.123pan.com/developer 注册获取
-                </p>
-              </div>
-
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >Client Secret</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="password"
-                    id="client_secret"
-                    value=""
-                    class="custom-input"
-                  />
-                </div>
-                <p class="text-xs text-gray-500 mt-1">
-                  https://www.123pan.com/developer 注册获取
-                </p>
-              </div>
-
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >图片文件后缀</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="text"
-                    id="image_extensions"
-                    value=".jpg,.jpeg,.png,.webp"
-                    class="custom-input"
-                  />
-                </div>
-                <p class="text-xs text-gray-500 mt-1">
-                  默认 .jpg, .jpeg, .png, .webp
-                </p>
-              </div>
-
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >下载图片名后缀</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="text"
-                    id="download_image_suffix"
-                    value=""
-                    class="custom-input"
-                  />
-                </div>
-                <p class="text-xs text-gray-500 mt-1">默认留空下载全部</p>
-              </div>
-
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >视频文件后缀</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="text"
-                    id="video_extensions"
-                    value=".mp4,.mkv,.ts,.iso"
-                    class="custom-input"
-                  />
-                </div>
-                <p class="text-xs text-gray-500 mt-1">
-                  默认 .mp4, .mkv, .ts, .iso
-                </p>
-              </div>
-
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >字幕文件后缀</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="text"
-                    id="subtitle_extensions"
-                    value=".srt,.ass,.sub"
-                    class="custom-input"
-                  />
-                </div>
-                <p class="text-xs text-gray-500 mt-1">默认 .srt, .ass, .sub</p>
-              </div>
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >文件处理选项</label
-                >
-                <div class="space-y-3">
-                  <div class="config-item-wrapper flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">下载 .nfo 文件</span>
-                    <label class="custom-checkbox">
-                      <input type="checkbox" id="nfo" class="sr-only peer" />
-                      <div class="checkbox-toggle"></div>
-                    </label>
+            <!-- 标签页内容 -->
+            <div class="flex-grow">
+              <div id="system-config" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <div class="mb-6">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >定时任务cron表达式</label
+                      >
+                      <div class="config-item-wrapper">
+                        <input
+                          type="text"
+                          id="cron"
+                          value="0 1 * * *"
+                          class="custom-input"
+                        />
+                      </div>
+                    </div>
+                    <div class="mb-6">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >Client Id</label
+                      >
+                      <div class="config-item-wrapper">
+                        <input
+                          type="text"
+                          id="client_id"
+                          value=""
+                          class="custom-input"
+                        />
+                      </div>
+                      <p class="text-xs text-gray-500 mt-1">
+                        https://www.123pan.com/developer 注册获取
+                      </p>
+                    </div>
+                    
+                    <div class="mb-6">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >Client Secret</label
+                      >
+                      <div class="config-item-wrapper">
+                        <input
+                          type="password"
+                          id="client_secret"
+                          value=""
+                          class="custom-input"
+                        />
+                      </div>
+                    </div>
+                    
                   </div>
-                  <div class="config-item-wrapper flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">下载字幕文件</span>
-                    <label class="custom-checkbox">
-                      <input
-                        type="checkbox"
-                        id="subtitle"
-                        class="sr-only peer"
-                      />                      <div class="checkbox-toggle"></div>                    </label>                  </div>                  <div class="config-item-wrapper flex items-center justify-between">                    <span class="text-sm font-medium text-gray-700">下载图片文件</span>                    <label class="custom-checkbox">                      <input type="checkbox" id="image" class="sr-only peer" />                      <div class="checkbox-toggle"></div>                    </label>                  </div>                </div>              </div>              <div class="mb-6">                <label class="block text-sm font-medium text-gray-700 mb-1"                  >覆盖模式</label                >                <div class="config-item-wrapper flex items-center justify-between">                  <span class="text-sm font-medium text-gray-700">同名strm文件是否重新生成/下载（可选，默认 False）</span>                  <label class="custom-checkbox">                    <input                      type="checkbox"                      id="overwrite"                      class="sr-only peer"                    />                    <div class="checkbox-toggle"></div>                  </label>                </div>              </div>              <div class="mb-6">                <label class="block text-sm font-medium text-gray-700 mb-1"                  >默认输出路径（不同任务请使用不同的文件夹）</label                >                <div class="config-item-wrapper">                  <input                    type="text"                    id="target_dir"                    class="custom-input"                    placeholder="/media/..."                  />                </div>              </div>              <div class="mb-6">                <label class="block text-sm font-medium text-gray-700 mb-1"                  >本地挂载路径前缀（302链接开启时无效）</label                >                <div class="config-item-wrapper">                  <input                    type="text"                    id="path_prefix"                    value=""                    class="custom-input"                    placeholder="/volume1/cloud/..."                  />                </div>              </div>
+                  
+                  <div>
+                    
+                    <div class="mb-6">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >程序启动后立即执行任务</label
+                      >
+                      <div class="config-item-wrapper flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">可选，默认 False</span>
+                        <label class="custom-checkbox">
+                          <input
+                            type="checkbox"
+                            id="running_on_start"
+                            class="sr-only peer"
+                          />
+                          <div class="checkbox-toggle"></div>
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >文件删除监听</label
+                      >
+                      <div class="config-item-wrapper flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">删除本地文件时同步删除云盘文件，默认关闭</span>
+                        <label class="custom-checkbox">
+                          <input
+                            type="checkbox"
+                            id="watch_delete"
+                            class="sr-only peer"
+                          />
+                          <div class="checkbox-toggle"></div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="generate-config" class="tab-content hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <div class="mb-6">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >302链接（推荐使用）</label
+                      >
+                      <div class="config-item-wrapper flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">使用官方下载链接播放（默认True）</span>
+                        <label class="custom-checkbox">
+                          <input
+                            type="checkbox"
+                            id="use_302_url"
+                            checked
+                            class="sr-only peer"
+                          />
+                          <div class="checkbox-toggle"></div>
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >代理地址</label
+                      >
+                      <div class="config-item-wrapper">
+                        <input
+                          type="text"
+                          id="proxy"
+                          value="http://127.0.0.1:1236"
+                          class="custom-input"
+                        />
+                      </div>
+                      <p class="text-xs text-gray-500 mt-1">
+                        必须配置，http://nas_ip:1236（默认 http://127.0.0.1:1236）
+                      </p>
+                    </div>
+
+                    <div class="mb-6">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >302链接缓存过期时间(秒)</label
+                      >
+                      <div class="config-item-wrapper">
+                        <input
+                          type="number"
+                          id="cache_expire_time"
+                          value="300"
+                          class="custom-input"
+                        />
+                      </div>
+                      <p class="text-xs text-gray-500 mt-1">默认5分钟</p>
+                    </div>
+                    <div class="mb-6">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >本地挂载路径前缀（302链接开启时无效）</label
+                      >
+                      <div class="config-item-wrapper">
+                        <input
+                          type="text"
+                          id="path_prefix"
+                          value=""
+                          class="custom-input"
+                          placeholder="/volume1/cloud/..."
+                        />
+                      </div>
+                    </div>
+                    
+                  </div>
+                  
+                  <div>
+                    
+                    <div class="mb-6">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >覆盖模式</label
+                      >
+                      <div class="config-item-wrapper flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">重新生成已存在的strm文件</span>
+                        <label class="custom-checkbox">
+                          <input
+                            type="checkbox"
+                            id="overwrite"
+                            class="sr-only peer"
+                          />
+                          <div class="checkbox-toggle"></div>
+                        </label>
+                      </div>
+                    </div>    
+                    
+                    <div class="mb-6">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >平铺模式</label
+                      >
+                      <div class="config-item-wrapper flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700"
+                          >开启后强制关闭图片、nfo等文件下载</span
+                        >
+                        <label class="custom-checkbox">
+                          <input
+                            type="checkbox"
+                            id="flatten_mode"
+                            class="sr-only peer"
+                          />
+                          <div class="checkbox-toggle"></div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="file-config" class="tab-content hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <!-- 视频文件配置 -->
+                  <div class="border border-gray-200 rounded-lg p-4">
+                    
+                    <div class="mb-4">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >视频文件后缀</label
+                      >
+                      <div class="config-item-wrapper">
+                        <input
+                          type="text"
+                          id="video_extensions"
+                          value=".mp4,.mkv,.ts,.iso"
+                          class="custom-input"
+                        />
+                      </div>
+                      <p class="text-xs text-gray-500 mt-1">
+                        默认 .mp4, .mkv, .ts, .iso
+                      </p>
+                    </div>
+                    
+                    <div class="config-item-wrapper flex items-center justify-between">
+                      <span class="text-sm font-medium text-gray-700">下载 .nfo 文件</span>
+                      <label class="custom-checkbox">
+                        <input
+                          type="checkbox"
+                          id="nfo"
+                          class="sr-only peer"
+                        />
+                        <div class="checkbox-toggle"></div>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <!-- 图片文件配置 -->
+                  <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="config-item-wrapper flex items-center justify-between mb-4">
+                      <span class="text-sm font-medium text-gray-700">下载图片文件</span>
+                      <label class="custom-checkbox">
+                        <input
+                          type="checkbox"
+                          id="image"
+                          class="sr-only peer"
+                        />
+                        <div class="checkbox-toggle"></div>
+                      </label>
+                    </div>
+                    <div class="space-y-3">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1"
+                          >图片文件后缀</label
+                        >
+                        <div class="config-item-wrapper">
+                          <input
+                            type="text"
+                            id="image_extensions"
+                            value=".jpg,.jpeg,.png,.webp"
+                            class="custom-input"
+                          />
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">
+                          默认 .jpg, .jpeg, .png, .webp
+                        </p>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1"
+                          >下载图片文件名后缀</label
+                        >
+                        <div class="config-item-wrapper">
+                          <input
+                            type="text"
+                            id="download_image_suffix"
+                            value=""
+                            class="custom-input"
+                          />
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">例如只想下载*poster、*background等文件时可以配置该字段为poster,background</p>
+                      </div>
+                    </div>
+                  </div>
+                
+                  <!-- 字幕文件配置 -->
+                  <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="config-item-wrapper flex items-center justify-between mb-4">
+                      <span class="text-sm font-medium text-gray-700">下载字幕文件</span>
+                      <label class="custom-checkbox">
+                        <input
+                          type="checkbox"
+                          id="subtitle"
+                          class="sr-only peer"
+                        />
+                        <div class="checkbox-toggle"></div>
+                      </label>
+                    </div>
+                    <div class="mb-2">
+                      <label class="block text-sm font-medium text-gray-700 mb-1"
+                        >字幕文件后缀</label
+                      >
+                      <div class="config-item-wrapper">
+                        <input
+                          type="text"
+                          id="subtitle_extensions"
+                          value=".srt,.ass,.sub"
+                          class="custom-input"
+                        />
+                      </div>
+                      <p class="text-xs text-gray-500 mt-1">默认 .srt, .ass, .sub</p>
+                    </div>
+                  </div>
+                  
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        <!-- 固定在底部的操作按钮 -->
-        <div class="fixed bottom-6 right-6 flex space-x-3 z-40">
-          <button
-            id="reset-float-btn"
-            class="w-14 h-14 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-200 transition-colors duration-200 btn-hover"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="currentColor"
-                d="M12.079 2.25c-4.794 0-8.734 3.663-9.118 8.333H2a.75.75 0 0 0-.528 1.283l1.68 1.666a.75.75 0 0 0 1.056 0l1.68-1.666a.75.75 0 0 0-.528-1.283h-.893c.38-3.831 3.638-6.833 7.612-6.833a7.66 7.66 0 0 1 6.537 3.643a.75.75 0 1 0 1.277-.786A9.16 9.16 0 0 0 12.08 2.25m8.761 8.217a.75.75 0 0 0-1.054 0L18.1 12.133a.75.75 0 0 0 .527 1.284h.899c-.382 3.83-3.651 6.833-7.644 6.833a7.7 7.7 0 0 1-6.565-3.644a.75.75 0 1 0-1.277.788a9.2 9.2 0 0 0 7.842 4.356c4.808 0 8.765-3.66 9.15-8.333H22a.75.75 0 0 0 .527-1.284z"
-              />
-            </svg>
-          </button>
-          <button
-            id="save-float-btn"
-            class="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors duration-200 btn-hover"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="currentColor"
-                fill-rule="evenodd"
-                d="M12.476 3.75c-2.75 0-4.964 2.2-4.964 4.897c0 .462.065.909.185 1.331c.497.144.963.36 1.383.64a.75.75 0 1 1-.827 1.25a3.54 3.54 0 0 0-1.967-.589c-1.961 0-3.536 1.57-3.536 3.486s1.575 3.485 3.536 3.485a.75.75 0 0 1 0 1.5c-2.773 0-5.036-2.224-5.036-4.985c0-2.705 2.17-4.893 4.864-4.983a6.4 6.4 0 0 1-.102-1.135c0-3.541 2.902-6.397 6.464-6.397c3.158 0 5.796 2.244 6.355 5.221c2.3.977 3.919 3.238 3.919 5.882c0 3.074-2.188 5.631-5.093 6.253a.75.75 0 0 1-.314-1.467c2.24-.48 3.907-2.446 3.907-4.786c0-2.137-1.39-3.962-3.338-4.628a5 5 0 0 0-1.626-.27c-.583 0-1.14.1-1.658.28a.75.75 0 0 1-.494-1.416a6.5 6.5 0 0 1 3.024-.305a4.96 4.96 0 0 0-4.682-3.264m2.041 13.707c.3.286.312.76.026 1.06l-2.857 3a.75.75 0 0 1-1.086 0l-1.143-1.2a.75.75 0 1 1 1.086-1.034l.6.63l2.314-2.43a.75.75 0 0 1 1.06-.026"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
     </main>
+
+    <!-- 底部操作按钮 -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex justify-between items-center shadow-lg">
+      <div class="text-sm text-gray-500">
+        <i class="fas fa-info-circle mr-1"></i> 修改配置后请点击保存按钮
+      </div>
+      <div class="flex justify-end space-x-4">
+        <button
+          id="reset-config-btn"
+          class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 btn-hover"
+          onclick="getConfigData()"
+        >
+          <i class="fas fa-redo-alt mr-2"></i> 重置
+        </button>
+        <button
+          id="save-config-btn"
+          class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 btn-hover"
+          onclick="saveConfig()"
+        >
+          <i class="fas fa-save mr-2"></i> 保存配置
+        </button>
+      </div>
+    </div>
 
     <!-- 模态框：添加任务 -->
     <div
@@ -661,110 +648,130 @@
         <div class="space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <div class="config-item-wrapper">
-                <label for="job_id" class="text-sm font-medium text-gray-700 mb-1">任务ID</label>
-                <input
-                  type="text"
-                  id="job_id"
-                  class="custom-input"
-                  placeholder="例如：国产剧"
-                />
+              <div class="mb-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >任务ID</label
+                >
+                <div class="config-item-wrapper">
+                  <input
+                    type="text"
+                    id="job_id"
+                    class="custom-input"
+                    placeholder="例如：国产剧"
+                  />
+                </div>
               </div>
-              <div class="config-item-wrapper">
-                <label for="job_root_folder_id" class="text-sm font-medium text-gray-700 mb-1">根文件夹ID</label>
-                <input
-                  type="text"
-                  id="job_root_folder_id"
-                  class="custom-input"
-                  placeholder="浏览器打开对应文件夹获取"
-                />
+              <div class="mb-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >根文件夹ID</label
+                >
+                <div class="config-item-wrapper">
+                  <input
+                    type="text"
+                    id="job_root_folder_id"
+                    class="custom-input"
+                    placeholder="浏览器打开对应文件夹获取"
+                  />
+                </div>
               </div>
-              <div class="config-item-wrapper">
-                <label for="job_target_dir" class="text-sm font-medium text-gray-700 mb-1">输出路径</label>
-                <input
-                  type="text"
-                  id="job_target_dir"
-                  class="custom-input"
-                  placeholder="/media/..."
-                />
+              <div class="mb-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >输出路径</label
+                >
+                <div class="config-item-wrapper">
+                  <input
+                    type="text"
+                    id="job_target_dir"
+                    class="custom-input"
+                    placeholder="/media/..."
+                  />
+                </div>
               </div>
-              <div class="config-item-wrapper">
-                <label for="job_client_id" class="text-sm font-medium text-gray-700 mb-1">Client Id (留空使用通用配置)</label>
-                <input
-                  type="text"
-                  id="job_client_id"
-                  value=""
-                  class="custom-input"
-                />
+              <div class="mb-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Client Id (留空使用系统配置)</label
+                >
+                <div class="config-item-wrapper">
+                  <input
+                    type="text"
+                    id="job_client_id"
+                    value=""
+                    class="custom-input"
+                  />
+                </div>
               </div>
-              <div class="config-item-wrapper">
-                <label for="job_client_secret" class="text-sm font-medium text-gray-700 mb-1">Client Secret (留空使用通用配置)</label>
-                <input
-                  type="password"
-                  id="job_client_secret"
-                  value=""
-                  class="custom-input"
-                />
+              <div class="mb-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Client Secret (留空使用系统配置)</label
+                >
+                <div class="config-item-wrapper">
+                  <input
+                    type="password"
+                    id="job_client_secret"
+                    value=""
+                    class="custom-input"
+                  />
+                </div>
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">默认文件处理选项</label>
-              <div class="space-y-3 mb-4">
-                <div class="config-item-wrapper">
-                  <div class="flex items-center justify-between">
-                    <span>下载字幕文件</span>
-                    <label class="custom-checkbox" for="job_subtitle">
-                      <input type="checkbox" id="job_subtitle" class="sr-only" />
-                      <span class="checkbox-toggle"></span>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >默认文件处理选项</label
+              >
+              <div class="space-y-3 p-4 border border-gray-200 rounded-lg mb-4">
+                <div class="config-item-wrapper flex items-center justify-between">
+                  <span>下载字幕文件</span>
+                  <label class="custom-checkbox">
+                      <input type="checkbox" id="job_subtitle" />
+                      <div class="checkbox-toggle"></div>
                     </label>
-                  </div>
                 </div>
-                <div class="config-item-wrapper">
-                  <div class="flex items-center justify-between">
-                    <span>下载图片文件</span>
-                    <label class="custom-checkbox" for="job_image">
-                      <input type="checkbox" id="job_image" class="sr-only" />
-                      <span class="checkbox-toggle"></span>
+                <div class="config-item-wrapper flex items-center justify-between">
+                  <span>下载图片文件</span>
+                  <label class="custom-checkbox">
+                      <input type="checkbox" id="job_image" />
+                      <div class="checkbox-toggle"></div>
                     </label>
-                  </div>
                 </div>
-                <div class="config-item-wrapper">
-                  <div class="flex items-center justify-between">
-                    <span>下载 .nfo 文件</span>
-                    <label class="custom-checkbox" for="job_nfo">
-                      <input type="checkbox" id="job_nfo" class="sr-only" />
-                      <span class="checkbox-toggle"></span>
+                <div class="config-item-wrapper flex items-center justify-between">
+                  <span>下载 .nfo 文件</span>
+                  <label class="custom-checkbox">
+                      <input type="checkbox" id="job_nfo" />
+                      <div class="checkbox-toggle"></div>
                     </label>
-                  </div>
                 </div>
-                <div class="config-item-wrapper">
-                  <div class="flex items-center justify-between">
-                    <span>覆盖模式</span>
-                    <label class="custom-checkbox" for="job_overwrite">
-                      <input type="checkbox" id="job_overwrite" class="sr-only" />
-                      <span class="checkbox-toggle"></span>
+                <div class="config-item-wrapper flex items-center justify-between">
+                  <span>覆盖模式</span>
+                  <label class="custom-checkbox">
+                      <input type="checkbox" id="job_overwrite" />
+                      <div class="checkbox-toggle"></div>
                     </label>
-                  </div>
                 </div>
               </div>
-              <div class="config-item-wrapper">
-                <label class="text-sm font-medium text-gray-700 mb-1">302链接（推荐使用）</label>
-                <div class="flex items-center justify-between">
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >302链接（推荐使用）</label
+                >
+                <div class="config-item-wrapper flex items-center justify-between">
                   <span>使用官方下载链接播放（默认True）</span>
-                  <label class="custom-checkbox" for="job_use_302_url">
-                    <input type="checkbox" id="job_use_302_url" class="sr-only" />
-                    <span class="checkbox-toggle"></span>
+                  <label class="custom-checkbox">
+                    <input type="checkbox" id="job_use_302_url" />
+                    <div class="checkbox-toggle"></div>
                   </label>
                 </div>
               </div>
-              <div class="config-item-wrapper">
-                <label for="job_path_prefix" class="text-sm font-medium text-gray-700 mb-1">本地挂载路径前缀（302链接开启时无效）</label>
-                <input
-                  type="text"
-                  id="job_path_prefix"
-                  value=""
-                  class="custom-input"
-                />
+              <div class="mb-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >本地挂载路径前缀（302链接开启时无效）</label
+                >
+                <div class="config-item-wrapper">
+                  <input
+                    type="text"
+                    id="job_path_prefix"
+                    value=""
+                    class="custom-input"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -874,9 +881,7 @@
             job.target_dir +
             '</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><button class="text-primary hover:text-primary/80 mr-3" onclick=editJob("' +
             job.id +
-            '")>编辑 </button><button class="text-primary hover:text-primary/80 mr-3" onclick=syncJob("' +
-            job.id +
-            '")>手动同步 </button><button class="text-danger hover:text-danger/80" onclick=deleteJob("' +
+            '")>编辑 </button><button class="text-danger hover:text-danger/80" onclick=deleteJob("' +
             job.id +
             '")>删除</button></td></tr>';
         });
@@ -929,12 +934,12 @@
           "overwrite",
           "watch_delete",
           "flatten_mode",
-          "target_dir",
           "path_prefix",
         ];
         keys.forEach((key) => {
           loadConfigKey(key, key);
         });
+        handleFileOptionsToggle();
       }
 
       function loadJobInfo(jobId) {
@@ -1021,40 +1026,6 @@
         currentConfig["flatten_mode"] =
           document.getElementById("flatten_mode").checked;
       }
-
-      // 浮动保存按钮
-      document
-        .getElementById("save-float-btn")
-        .addEventListener("click", function () {
-          saveConfigData();
-          fetch("/save_config", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(currentConfig),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              console.log("Success:", data);
-              showToast("success", "保存成功", "配置已成功保存");
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-              showToast("error", "保存失败", "配置保存失败");
-            });
-        });
-
-      // 浮动重置按钮
-      document
-        .getElementById("reset-float-btn")
-        .addEventListener("click", function () {
-          if (confirm("确定要重置所有配置为默认值吗？")) {
-            // 这里可以添加重置逻辑
-            getConfigData();
-            showToast("info", "重置成功", "配置已恢复默认值");
-          }
-        });
 
       // 添加任务按钮
       document
@@ -1211,6 +1182,56 @@
         }, 3000);
       }
 
+      // 保存配置数据
+      function saveConfig() {
+        // 保存配置数据
+        saveConfigData()
+        // 发送保存请求
+        fetch('/save_config', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(currentConfig)
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              showToast('success', '保存成功', '配置已保存');
+            } else {
+              showToast('error', '保存失败', data.message || '无法保存配置');
+            }
+          })
+          .catch(error => {
+            console.error('保存配置失败:', error);
+            showToast('error', '请求失败', '无法连接到服务器');
+          });
+      }
+
+      // 标签页切换功能
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+          // 隐藏所有内容
+          document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.add('hidden');
+          });
+          
+          // 移除所有按钮的活动状态
+          document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('text-primary', 'bg-primary/5', 'border-primary');
+            btn.classList.add('text-gray-600', 'bg-white', 'border-transparent');
+          });
+          
+          // 显示选中的内容
+          const tabId = button.getAttribute('data-tab');
+          document.getElementById(tabId).classList.remove('hidden');
+          
+          // 设置按钮的活动状态
+          button.classList.remove('text-gray-600', 'bg-white', 'border-transparent');
+          button.classList.add('text-primary', 'bg-primary/5', 'border-primary');
+        });
+      });
+      
       // 平滑滚动
       document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
         anchor.addEventListener("click", function (e) {
@@ -1222,9 +1243,51 @@
         });
       });
 
+      // 302链接开关联动功能
+      function handle302UrlToggle() {
+        const use302Url = document.getElementById('use_302_url').checked;
+        const cacheExpireTimeContainer = document.getElementById('cache_expire_time').closest('.mb-6');
+        const proxyContainer = document.getElementById('proxy').closest('.mb-6');
+        const pathPrefixContainer = document.getElementById('path_prefix').closest('.mb-6');
+
+        if (use302Url) {
+          // 开启302链接时
+          cacheExpireTimeContainer.classList.remove('hidden');
+          proxyContainer.classList.remove('hidden');
+          pathPrefixContainer.classList.add('hidden');
+        } else {
+          // 关闭302链接时
+          cacheExpireTimeContainer.classList.add('hidden');
+          proxyContainer.classList.add('hidden');
+          pathPrefixContainer.classList.remove('hidden');
+        }
+      }
+
+      // 文件处理选项开关联动功能
+      function handleFileOptionsToggle() {
+        // 下载字幕文件开关与字幕文件后缀配置联动
+        const subtitleToggle = document.getElementById('subtitle').checked;
+        const subtitleExtensionsContainer = document.getElementById('subtitle_extensions').parentElement;
+        subtitleExtensionsContainer.classList.toggle('hidden', !subtitleToggle);
+
+        // 下载图片文件开关与图片文件后缀配置联动
+        const imageToggle = document.getElementById('image').checked;
+        const imageSettingsContainer = document.querySelector('#image').closest('.border.border-gray-200.rounded-lg.p-4').querySelector('.space-y-3');
+        imageSettingsContainer.classList.toggle('hidden', !imageToggle);
+      }
+
       // 页面加载完成后获取配置数据
       document.addEventListener("DOMContentLoaded", function () {
         getConfigData();
+        
+        // 初始调用一次，确保状态正确
+        handle302UrlToggle();
+        handleFileOptionsToggle();
+        
+        // 添加事件监听器
+        document.getElementById('use_302_url').addEventListener('change', handle302UrlToggle);
+        document.getElementById('subtitle').addEventListener('change', handleFileOptionsToggle);
+        document.getElementById('image').addEventListener('change', handleFileOptionsToggle);
       });
 
       // 刮削按钮点击事件

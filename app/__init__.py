@@ -5,29 +5,23 @@
 """
 
 # 包版本信息
-__version__ = "1.11.4"
+__version__ = "2.0.0"
 
-# 延迟导入以避免循环依赖
 logger = None
-config = None
 
 
 def init_app():
     """
     延迟初始化应用组件
     """
-    global logger, config
-    from .simple_logger import setup_logger
+    global logger
+    from .logger import setup_logger
 
     logger = setup_logger()
-
-    from .utils import load_config
-
-    config = load_config()
 
 
 init_app()
 
 # 基础导入
+from . import cloud_api
 from . import utils
-from . import api

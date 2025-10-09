@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>123strm - 首页</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#165DFF",
+              secondary: "#36CFC9",
+              success: "#52C41A",
+              warning: "#FAAD14",
+              danger: "#FF4D4F",
+              dark: "#1D2129",
+              light: "#F2F3F5",
+            },
+            fontFamily: {
+              inter: ["Inter", "system-ui", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style type="text/tailwindcss">
+      @layer utilities {
+        .content-auto {
+          content-visibility: auto;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .card-shadow {
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        .input-focus {
+          @apply focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-200;
+        }
+        .btn-hover {
+          @apply hover:shadow-md transition-all duration-200;
+        }
+        .card-hover {
+          @apply hover:shadow-lg transition-all duration-300 hover:-translate-y-1;
+        }
+      }
+    </style>
+  </head>
+
+  <body class="font-inter bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+      <div
+        class="container mx-auto px-4 py-2 flex items-center justify-between"
+      >
+        <div class="flex items-center space-x-2">
+          <h1 class="text-xl font-semibold text-gray-800">123strm</h1>
+        </div>
+        <nav class="hidden md:flex items-center space-x-6">
+          <a href="/" class="text-primary font-medium">首页</a>
+          <a
+            href="/config.html"
+            class="text-gray-600 hover:text-primary transition-colors"
+            >配置管理</a
+          >
+        </nav>
+        <div class="flex items-center space-x-4">
+          <a
+            href="https://www.omgx.cn/archives/1749797289692"
+            target="_blank"
+            class="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="currentColor"
+                fill-rule="evenodd"
+                d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10M12 7.75c-.621 0-1.125.504-1.125 1.125a.75.75 0 0 1-1.5 0a2.625 2.625 0 1 1 4.508 1.829q-.138.142-.264.267a7 7 0 0 0-.571.617c-.22.282-.298.489-.298.662V13a.75.75 0 0 1-1.5 0v-.75c0-.655.305-1.186.614-1.583c.229-.294.516-.58.75-.814q.106-.105.193-.194A1.125 1.125 0 0 0 12 7.75M12 17a1 1 0 1 0 0-2a1 1 0 0 0 0 2"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </a>
+          <a
+            href="https://github.com/knifezred/123strm"
+            target="_blank"
+            class="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="currentColor"
+                d="M12.001 2c-5.525 0-10 4.475-10 10a9.99 9.99 0 0 0 6.837 9.488c.5.087.688-.213.688-.476c0-.237-.013-1.024-.013-1.862c-2.512.463-3.162-.612-3.362-1.175c-.113-.288-.6-1.175-1.025-1.413c-.35-.187-.85-.65-.013-.662c.788-.013 1.35.725 1.538 1.025c.9 1.512 2.337 1.087 2.912.825c.088-.65.35-1.087.638-1.337c-2.225-.25-4.55-1.113-4.55-4.938c0-1.088.387-1.987 1.025-2.687c-.1-.25-.45-1.275.1-2.65c0 0 .837-.263 2.75 1.024a9.3 9.3 0 0 1 2.5-.337c.85 0 1.7.112 2.5.337c1.913-1.3 2.75-1.024 2.75-1.024c.55 1.375.2 2.4.1 2.65c.637.7 1.025 1.587 1.025 2.687c0 3.838-2.337 4.688-4.562 4.938c.362.312.675.912.675 1.85c0 1.337-.013 2.412-.013 2.75c0 .262.188.574.688.474A10.02 10.02 0 0 0 22 12c0-5.525-4.475-10-10-10"
+              />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+      <div class="container mx-auto max-w-6xl">
+        <!-- 欢迎区域 -->
+        <section class="mb-10">
+          <div
+            class="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between"
+          >
+            <div class="mb-6 md:mb-0">
+              <h1
+                class="text-[clamp(1.75rem,4vw,2.75rem)] font-bold text-gray-800 mb-2"
+              >
+                欢迎使用 123strm
+              </h1>
+              <p class="text-gray-600 max-w-md">
+                123strm 是一个用于管理和处理 123
+                云盘资源的工具，可以帮助您方便地创建 strm 文件并管理媒体资源。
+              </p>
+            </div>
+            <div class="flex space-x-4">
+              <a
+                href="/config.html"
+                class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 flex items-center btn-hover"
+              >
+                <i class="fas fa-cog mr-2"></i> 配置管理
+              </a>
+              <a
+                href="https://www.omgx.cn/archives/1749797289692"
+                target="_blank"
+                class="px-6 py-3 bg-white text-primary border border-primary rounded-lg hover:bg-gray-50 transition-colors duration-200 flex items-center btn-hover"
+              >
+                <i class="fas fa-book mr-2"></i> 使用文档
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- 快速操作 -->
+        <section class="mb-10">
+          <h2 class="text-xl font-semibold mb-6 flex items-center">
+            <i class="fas fa-bolt text-primary mr-2"></i> 快速操作
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- 刮削指定目录 -->
+            <div class="bg-white rounded-xl card-shadow p-6 card-hover">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-800">刮削指定目录</h3>
+                <div
+                  class="w-10 h-10 bg-secondary/10 rounded-full flex items-center justify-center text-secondary"
+                >
+                  <i class="fas fa-search"></i>
+                </div>
+              </div>
+              <p class="text-gray-600 text-sm mb-4">
+                刮削指定目录下的媒体文件信息，生成对应的 strm 文件和元数据。
+              </p>
+              <button
+                id="quick-scrape-btn"
+                class="w-full py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors duration-200 btn-hover"
+              >
+                立即刮削
+              </button>
+            </div>
+
+            <!-- 上传本地目录 -->
+            <div class="bg-white rounded-xl card-shadow p-6 card-hover">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-800">上传本地目录</h3>
+                <div
+                  class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary"
+                >
+                  <i class="fas fa-upload"></i>
+                </div>
+              </div>
+              <p class="text-gray-600 text-sm mb-4">
+                将本地媒体目录上传到 123 云盘，并保持目录结构和文件元信息。
+              </p>
+              <button
+                id="quick-upload-btn"
+                class="w-full py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 btn-hover"
+              >
+                立即上传
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- 底部版权信息 -->
+    <footer class="bg-white border-t border-gray-200 py-6">
+      <div class="container mx-auto px-4 text-center text-gray-600 text-sm">
+        <p>© 2025 123strm - 123云盘媒体资源管理工具</p>
+        <p class="mt-2">
+          <a
+            href="https://www.omgx.cn/archives/1749797289692"
+            target="_blank"
+            class="text-primary hover:underline mr-4"
+            >使用文档</a
+          >
+          <a
+            href="https://github.com/knifezred/123strm"
+            target="_blank"
+            class="text-primary hover:underline"
+            >GitHub</a
+          >
+        </p>
+      </div>
+    </footer>
+
+    <!-- 提示消息 -->
+    <div
+      id="toast"
+      class="fixed top-6 right-0 bg-white rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 z-50 flex items-center"
+    >
+      <div
+        id="toast-icon"
+        class="w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-green-100"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+        >
+          <path
+            fill="#52C41A"
+            d="M2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8m6-7a7 7 0 1 0 0 14A7 7 0 0 0 8 1m2.854 5.854a.5.5 0 0 0-.708-.708L7.25 9.043L5.854 7.646a.5.5 0 1 0-.708.708l1.75 1.75a.5.5 0 0 0 .708 0z"
+          />
+        </svg>
+      </div>
+      <div>
+        <h4 id="toast-title" class="font-medium text-gray-900">操作成功</h4>
+        <p id="toast-message" class="text-sm text-gray-500">配置已保存</p>
+      </div>
+      <button id="close-toast" class="ml-4 text-gray-400 hover:text-gray-600">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+
+    <!-- 快速操作模态框 -->
+    <div
+      id="quick-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center"
+    >
+      <div
+        class="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 transform transition-all duration-300 scale-95 opacity-0"
+        id="modal-content"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold" id="modal-title">快速操作</h3>
+          <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        <div class="space-y-4" id="modal-body">
+          <!-- 模态框内容将根据操作类型动态生成 -->
+        </div>
+        <div class="flex justify-end mt-6 space-x-3">
+          <button
+            id="cancel-modal"
+            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 btn-hover"
+          >
+            取消
+          </button>
+          <button
+            id="confirm-modal"
+            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 btn-hover"
+          >
+            确认
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let jot_ids = [];
+      // 页面加载完成后执行
+      document.addEventListener("DOMContentLoaded", function () {
+        getJobIds();
+        // 添加事件监听
+        setupEventListeners();
+      });
+
+      // 设置事件监听
+      function setupEventListeners() {
+        // 快速刮削按钮
+        document
+          .getElementById("quick-scrape-btn")
+          .addEventListener("click", () => {
+            openQuickModal("刮削指定目录", createScrapeForm());
+            loadJobOptions();
+          });
+
+        // 快速上传按钮
+        document
+          .getElementById("quick-upload-btn")
+          .addEventListener("click", () => {
+            openQuickModal("上传本地目录", createUploadForm());
+            loadJobOptions();
+          });
+
+        // 关闭模态框按钮
+        document
+          .getElementById("close-modal")
+          .addEventListener("click", closeQuickModal);
+        document
+          .getElementById("cancel-modal")
+          .addEventListener("click", closeQuickModal);
+
+        // 确认模态框按钮
+        document
+          .getElementById("confirm-modal")
+          .addEventListener("click", handleConfirmModal);
+
+        // 关闭提示消息
+        document
+          .getElementById("close-toast")
+          .addEventListener("click", function () {
+            const toast = document.getElementById("toast");
+            toast.classList.remove("translate-x-0");
+            toast.classList.add("translate-x-full");
+          });
+      }
+
+      // 打开快速操作模态框
+      function openQuickModal(title, bodyContent) {
+        document.getElementById("modal-title").textContent = title;
+        document.getElementById("modal-body").innerHTML = bodyContent;
+
+        const modal = document.getElementById("quick-modal");
+        const modalContent = document.getElementById("modal-content");
+
+        modal.classList.remove("hidden");
+        setTimeout(() => {
+          modalContent.classList.remove("scale-95", "opacity-0");
+          modalContent.classList.add("scale-100", "opacity-100");
+        }, 10);
+      }
+
+      // 关闭快速操作模态框
+      function closeQuickModal() {
+        const modal = document.getElementById("quick-modal");
+        const modalContent = document.getElementById("modal-content");
+
+        modalContent.classList.remove("scale-100", "opacity-100");
+        modalContent.classList.add("scale-95", "opacity-0");
+
+        setTimeout(() => {
+          modal.classList.add("hidden");
+        }, 300);
+      }
+
+      // 加载任务ID列表
+      current_job_id = null;
+      function getJobIds() {
+        fetch("/get_job_ids")
+          .then((response) => response.json())
+          .then((data) => {
+            jot_ids = data.result || [];
+          })
+          .catch((error) => {
+            console.error("加载任务ID失败:", error);
+            showToast("error", "加载失败", "无法加载任务列表，请稍后再试");
+          });
+      }
+
+      function loadJobOptions() {
+        const jobSelect = document.getElementById("modal-dep-job-id");
+        jobSelect.innerHTML = '<option value="">请选择任务</option>';
+        jot_ids.forEach((job) => {
+          const option = document.createElement("option");
+          option.value = job;
+          option.textContent = job;
+          jobSelect.appendChild(option);
+        });
+
+        // 添加任务选择事件
+        jobSelect.addEventListener("change", function () {
+          current_job_id = this.value;
+          const folderContainer = document.getElementById(
+            "scrape-folder-container"
+          );
+          const mediaContainer = document.getElementById(
+            "scrape-media-container"
+          );
+
+          if (current_job_id) {
+            folderContainer.classList.remove("hidden");
+            mediaContainer.classList.remove("hidden");
+            loadFolderTree(current_job_id, "root");
+            // 加载任务目标目录
+            loadJobTargetDir(current_job_id);
+          } else {
+            folderContainer.classList.add("hidden");
+            mediaContainer.classList.add("hidden");
+          }
+        });
+      }
+
+      // 定义全局导航历史记录
+      let folderNavigationHistory = []; // 用于存储文件夹导航历史
+      let currentFolderId = null; // 当前文件夹ID
+      let currentMediaPathParts = []; // 用于存储当前路径的各个部分
+      current_job_id = null;
+
+      // 加载文件夹树
+      function loadFolderTree(jobId, folder_id) {
+        // 清除之前的所有事件监听器
+        const newClickListener = function (event) {
+          // 阻止事件冒泡，避免触发父元素的点击事件
+          event.stopPropagation();
+        };
+
+        // 首先获取folderTree元素
+        let folderTree = document.getElementById("folder-tree");
+        if (!folderTree) {
+          console.error("folder-tree元素未找到");
+          return;
+        }
+
+        // 移除之前的点击事件监听器
+        const newFolderTree = folderTree.cloneNode(true);
+        folderTree.parentNode.replaceChild(newFolderTree, folderTree);
+        // 重新获取folderTree引用
+        folderTree = document.getElementById("folder-tree");
+        // 添加新的点击事件监听器
+        folderTree.addEventListener("click", newClickListener);
+
+        fetch(`/get_job_folders/${jobId}/${folder_id}`)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              // 更新当前文件夹ID
+              currentFolderId = folder_id;
+
+              // 如果是直接加载根目录，清空历史记录和路径
+              if (folder_id === "root") {
+                folderNavigationHistory = [];
+                currentMediaPathParts = [];
+                updateMediaPathInput();
+              }
+
+              // 设置容器为空，准备添加新内容
+              folderTree.innerHTML = "";
+
+              // 添加返回按钮
+              if (folderNavigationHistory.length > 0) {
+                const returnButton = document.createElement("div");
+                returnButton.className = "mb-2";
+                returnButton.innerHTML =
+                  '<button class="flex items-center text-sm text-primary hover:text-primary/80 px-2 py-1 rounded hover:bg-primary/5">' +
+                  '<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">' +
+                  '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />' +
+                  "</svg>" +
+                  "返回上级" +
+                  "</button>";
+
+                // 添加点击事件
+                returnButton
+                  .querySelector("button")
+                  .addEventListener("click", function () {
+                    // 从历史记录中获取并移除最后一个文件夹ID
+                    const parentFolderId = folderNavigationHistory.pop();
+                    // 从路径部分中移除最后一个文件夹
+                    currentMediaPathParts.pop();
+                    // 更新刮削目录输入框
+                    updateMediaPathInput();
+                    console.log("返回上级文件夹:", parentFolderId);
+                    // 加载父文件夹
+                    loadFolderTree(current_job_id, parentFolderId);
+                  });
+
+                folderTree.appendChild(returnButton);
+              }
+
+              // 渲染文件夹树
+              renderFolderTree(folderTree, data.result);
+            }
+          })
+          .catch((error) => {
+            console.error("加载文件夹树失败:", error);
+            folderTree.innerHTML =
+              '<div class="text-red-500 text-center py-4">加载文件夹失败</div>';
+          });
+      }
+
+      // 加载任务目标目录
+      function loadJobTargetDir(jobId) {
+        const mediaPathInput = document.getElementById(
+          "modal-scrape-media-path"
+        );
+        mediaPathInput.value = "加载中...";
+
+        fetch(`/get_job_target_dir/${jobId}`)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              mediaPathInput.value = data.result || "";
+              mediaPathInput.dataset.basePath = data.result || "";
+            } else {
+              mediaPathInput.value = "";
+              mediaPathInput.dataset.basePath = "";
+              currentMediaPathParts = [];
+              showToast(
+                "error",
+                "加载失败",
+                data.message || "无法加载任务目标目录"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("加载任务目标目录失败:", error);
+            mediaPathInput.value = "";
+            mediaPathInput.dataset.basePath = "";
+            currentMediaPathParts = [];
+            showToast("error", "加载失败", "无法加载任务目标目录");
+          });
+      }
+
+      // 更新刮削目录输入框
+      function updateMediaPathInput() {
+        const basePath =
+          document.getElementById("modal-scrape-media-path").dataset.basePath ||
+          "";
+        const fullPath =
+          basePath +
+          currentMediaPathParts.join("/") +
+          (currentMediaPathParts.length > 0 ? "/" : "");
+        document.getElementById("modal-scrape-media-path").value = fullPath;
+      }
+
+      // 渲染文件夹树
+      function renderFolderTree(container, folders) {
+        console.log("渲染当前层级文件夹:", folders);
+
+        // 如果没有文件夹数据，显示提示信息
+        if (!folders || folders.length === 0) {
+          const emptyMessage = document.createElement("div");
+          emptyMessage.className = "text-gray-500 text-center py-4";
+          emptyMessage.textContent = "当前目录下没有文件夹";
+          container.appendChild(emptyMessage);
+          return;
+        }
+
+        // 直接渲染当前层级的文件夹，不构建层次结构
+        folders.forEach((folder) => {
+          if (!folder || !folder.fileId || !folder.filename) {
+            console.warn("忽略无效的文件夹数据:", folder);
+            return;
+          }
+
+          const folderItem = document.createElement("div");
+          folderItem.className =
+            "flex items-center py-1 px-0 cursor-pointer hover:bg-gray-50 rounded folder-item";
+          // 添加CSS样式禁止文本选择
+          folderItem.style.webkitUserSelect = "none";
+          folderItem.style.mozUserSelect = "none";
+          folderItem.style.msUserSelect = "none";
+          folderItem.style.userSelect = "none";
+          folderItem.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+            <span>${folder.filename}</span>
+          `;
+
+          // 存储文件夹信息到DOM元素上
+          folderItem.dataset.fileId = folder.fileId;
+          folderItem.dataset.filename = folder.filename;
+          if (folder.parentFileId) {
+            folderItem.dataset.parentFileId = folder.parentFileId;
+          }
+
+          // 单击事件：选中文件夹
+          folderItem.addEventListener("click", function () {
+            console.log("选中文件夹:", folder);
+            // 移除所有选中项的样式
+            document
+              .querySelectorAll("#folder-tree .bg-primary\\/10")
+              .forEach((el) => {
+                el.classList.remove("bg-primary/10", "font-medium");
+                currentMediaPathParts.splice(
+                  currentMediaPathParts.indexOf(folder.filename),
+                  1
+                );
+              });
+            // 添加当前选中项样式
+            this.classList.add("bg-primary/10", "font-medium");
+            // 设置选中的文件夹ID
+            document.getElementById("modal-cloud-folder-id").value =
+              folder.fileId;
+            // 将当前文件夹名称添加到路径部分
+            currentMediaPathParts.push(folder.filename);
+            // 更新刮削目录输入框
+            updateMediaPathInput();
+          });
+
+          // 双击事件：进入下一级文件夹
+          folderItem.addEventListener("dblclick", function (event) {
+            // 阻止默认的文本选中行为
+            event.preventDefault();
+            event.stopPropagation();
+
+            console.log("进入文件夹:", folder);
+            // 记录当前文件夹ID到历史记录
+            folderNavigationHistory.push(currentFolderId);
+            // 加载子文件夹
+            loadFolderTree(current_job_id, folder.fileId);
+          });
+
+          container.appendChild(folderItem);
+        });
+      }
+
+      // 创建刮削表单
+      function createScrapeForm() {
+        return `
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">依赖任务</label>
+              <select id="modal-dep-job-id" class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                <option value="">请选择</option>
+              </select>
+            </div>
+            <div id="scrape-folder-container" class="hidden">
+              <label class="block text-sm font-medium text-gray-700 mb-1">目标文件夹</label>
+              <div id="folder-tree" class="border border-gray-300 rounded-lg p-3 max-h-60 overflow-y-auto bg-white"></div>
+              <input type="hidden" id="modal-cloud-folder-id">
+            </div>
+            <div id="scrape-media-container" class="hidden">
+              <label class="block text-sm font-medium text-gray-700 mb-1">刮削目录</label>
+              <input type="text" id="modal-scrape-media-path" class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus" placeholder="刮削目录路径">
+            </div>
+          </div>
+        `;
+      }
+
+      // 创建上传表单
+      function createUploadForm() {
+        return `
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">依赖任务</label>
+              <select id="modal-dep-job-id" class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus">
+                <option value="">请选择</option>
+              </select>
+            </div>
+            <div id="scrape-folder-container" class="hidden">
+              <label class="block text-sm font-medium text-gray-700 mb-1">目标文件夹</label>
+              <div id="folder-tree" class="border border-gray-300 rounded-lg p-3 max-h-60 overflow-y-auto bg-white"></div>
+              <input type="hidden" id="modal-cloud-folder-id">
+            </div>
+            <div id="scrape-media-container" class="hidden">
+              <label class="block text-sm font-medium text-gray-700 mb-1">本地上传文件夹路径</label>
+              <input type="text" id="modal-upload-folder-path" class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus" placeholder="本地文件夹路径，例如：/media/upload/">
+              <input type="hidden" id="modal-scrape-media-path" >
+            </div>
+          </div>
+        `;
+      }
+
+      // 处理确认模态框
+      function handleConfirmModal() {
+        const title = document.getElementById("modal-title").textContent;
+        let success = false;
+        let message = "";
+
+        if (title === "刮削指定目录") {
+          const folderId = document
+            .getElementById("modal-cloud-folder-id")
+            .value.trim();
+          const depJobId = document
+            .getElementById("modal-dep-job-id")
+            .value.trim();
+          const mediaPath = document
+            .getElementById("modal-scrape-media-path")
+            .value.trim();
+
+          if (!folderId || !depJobId || !mediaPath) {
+            showToast("error", "输入错误", "请填写所有必填字段");
+            return;
+          }
+
+          // 调用后端API执行刮削任务
+          fetch("/scrape_directory", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              dep_job_id: depJobId,
+              parent_id: folderId,
+              parent_path: mediaPath,
+              output_path: mediaPath, // 使用刮削目录作为输出路径
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                closeQuickModal();
+                showToast(
+                  "success",
+                  "操作成功",
+                  data.message || "刮削任务已启动"
+                );
+              } else {
+                showToast(
+                  "error",
+                  "操作失败",
+                  data.message || "刮削任务启动失败"
+                );
+              }
+            })
+            .catch((error) => {
+              console.error("刮削任务失败:", error);
+              showToast(
+                "error",
+                "操作失败",
+                "刮削任务启动失败，请检查网络连接"
+              );
+            });
+
+          // 由于是异步操作，直接返回
+          return;
+        } else if (title === "上传本地目录") {
+          const folderPath = document
+            .getElementById("modal-upload-folder-path")
+            .value.trim();
+          const depJobId = document
+            .getElementById("modal-dep-job-id")
+            .value.trim();
+          const cloudFolderId = document
+            .getElementById("modal-cloud-folder-id")
+            .value.trim();
+          if (!folderPath || !depJobId || !cloudFolderId) {
+            showToast("error", "输入错误", "请填写所有必填字段");
+            return;
+          }
+
+          // 准备上传参数
+          const uploadParams = {
+            dep_job_id: depJobId,
+            folder_path: folderPath,
+            parent_id: cloudFolderId,
+          };
+          console.log(uploadParams);
+
+          // 发送上传请求
+          fetch("/upload_directory", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(uploadParams),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                showToast("success", "上传任务已完成", "任务执行完成");
+                // 清空输入框
+                document.getElementById("upload_folder_id").value = "";
+              } else {
+                showToast(
+                  "error",
+                  "上传失败",
+                  data.message || "上传任务启动失败"
+                );
+              }
+            })
+            .catch((error) => {
+              console.error("上传请求失败:", error);
+              showToast("error", "请求失败", "无法连接到服务器");
+            });
+          success = true;
+          message = "上传任务已启动";
+        }
+
+        if (success) {
+          closeQuickModal();
+          showToast("success", "操作成功", message);
+        }
+      }
+
+      // 显示提示消息
+      function showToast(type, title, message) {
+        const toast = document.getElementById("toast");
+        const toastIcon = document.getElementById("toast-icon");
+        const toastTitle = document.getElementById("toast-title");
+        const toastMessage = document.getElementById("toast-message");
+
+        // 设置提示类型
+        if (type === "success") {
+          toastIcon.className =
+            "w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-green-100";
+          toastIcon.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="#52C41A" d="M2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8m6-7a7 7 0 1 0 0 14A7 7 0 0 0 8 1m2.854 5.854a.5.5 0 0 0-.708-.708L7.25 9.043L5.854 7.646a.5.5 0 1 0-.708.708l1.75 1.75a.5.5 0 0 0 .708 0z"/></svg>';
+        } else if (type === "error") {
+          toastIcon.className =
+            "w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-red-100";
+          toastIcon.innerHTML = '<i class="fa fa-times text-red-500"></i>';
+        } else if (type === "warning") {
+          toastIcon.className =
+            "w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-yellow-100";
+          toastIcon.innerHTML =
+            '<i class="fa fa-exclamation text-yellow-500"></i>';
+        } else if (type === "info") {
+          toastIcon.className =
+            "w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-blue-100";
+          toastIcon.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#165DFF" d="M12 17.75a.75.75 0 0 0 .75-.75v-6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75M12 7a1 1 0 1 1 0 2a1 1 0 0 1 0-2"/><path fill="#165DFF" fill-rule="evenodd" d="M1.25 12C1.25 6.063 6.063 1.25 12 1.25S22.75 6.063 22.75 12S17.937 22.75 12 22.75S1.25 17.937 1.25 12M12 2.75a9.25 9.25 0 1 0 0 18.5a9.25 9.25 0 0 0 0-18.5" clip-rule="evenodd"/></svg>';
+        }
+
+        // 设置提示内容
+        toastTitle.textContent = title;
+        toastMessage.textContent = message;
+
+        // 显示提示
+        toast.classList.remove("translate-x-full");
+        toast.classList.add("translate-x-0");
+
+        // 3秒后自动关闭
+        setTimeout(() => {
+          toast.classList.remove("translate-x-0");
+          toast.classList.add("translate-x-full");
+        }, 3000);
+      }
+    </script>
+  </body>
+</html>

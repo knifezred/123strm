@@ -5,24 +5,20 @@ API连接管理模块
 
 import http.client
 import json
-import yaml
 import os
 import time
-import shutil
 import threading
-import urllib.parse
 import requests
 from datetime import datetime, timedelta
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import RedirectResponse, FileResponse
+from .exceptions import ApiError
 
 
-from app.utils import (
+from .config_manager import config_manager
+from .utils import (
     calculate_chunk_md5,
     read_file_chunks,
 )
 
-from .config_manager import config_manager
 from app import logger
 
 
@@ -95,6 +91,20 @@ global_job_cache_tokens = {}
 # 默认缓存状态
 default_use_cache_token = True
 
+# 配置文件夹
+config_folder = config_manager.get_config_folder()
+
+
+# 文件下载URL缓存 (存储格式: {file_id: {'url': url, 'expire_time': timestamp}})
+download_url_cache = {}
+
+
+def clean_download_url_cache():
+    """清理过期302链接缓存项"""
+    for file_id, item in list(download_url_cache.items()):
+        if time.time() > item["expire_time"]:
+            del download_url_cache[file_id]
+
 
 def http_123_request(job_id, payload="", path="", method="GET"):
     """
@@ -132,9 +142,10 @@ def http_123_request(job_id, payload="", path="", method="GET"):
             else:
                 # 操作频繁，暂停30秒
                 time.sleep(30)
-            logger.error(job_id + "\n" + response["message"])
-            raise HTTPException(
-                status_code=response["code"], detail=response["message"]
+            error_msg = f"API请求失败(job_id={job_id}): {response['message']}"
+            logger.error(error_msg, {"job_id": job_id, "response_code": response["code"]})
+            raise ApiError(
+                error_msg, error_code=response["code"], details={"job_id": job_id}
             )
         return response
     finally:
@@ -171,9 +182,7 @@ def get_access_token(job_id):
     """
     client_id = config_manager.get("client_id", job_id=job_id)
     # 根据client_id生成缓存文件名
-    cache_file = os.path.join(
-        config_manager.get_config_folder(), f"token_cache_{client_id}.json"
-    )
+    cache_file = os.path.join(config_folder, f"token_cache_{client_id}.json")
     # 尝试从缓存文件读取token信息
     # 检查job_id是否在缓存设置中，不在则使用默认值
     use_cache = global_job_cache_tokens.get(job_id, default_use_cache_token)
@@ -230,7 +239,7 @@ def heartbeat(job_id):
             download_url_cache[heartbeat_url] = {
                 "url": heartbeat_url,
                 "expire_time": time.time()
-                + config_manager.get("cache_expire_time", job_id, default=300),
+                + config_manager.get("cache_expire_time", job_id),
             }
             if jsonData["code"] != 0:
                 # 抛出异常以便调用者处理
@@ -276,6 +285,22 @@ def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, max_retr
             )
         else:
             raise Exception(f"获取文件列表失败: {parent_file_id}")
+
+
+def get_file_infos(job_id, file_ids):
+    """
+    获取多个文件信息
+    :param file_ids: 文件ID列表，逗号分隔
+    :return: 文件信息JSON数据
+    """
+    try:
+        payload = json.dumps({"fileIds": file_ids})
+        response = http_123_request(
+            job_id, payload=payload, path=f"/api/v1/file/infos", method="POST"
+        )
+        return response
+    except:
+        raise Exception(f"获取文件信息失败: {file_ids}")
 
 
 def get_file_info(fileId, job_id, max_retries=0):
@@ -528,93 +553,3 @@ def complete_multipart_upload(
         # 捕获所有其他异常
         logger.error(f"分片上传过程中发生错误: {str(e)}")
         return {"code": 999, "message": f"Upload process failed: {str(e)}"}
-
-
-###############API#############
-
-# 文件下载URL缓存 (存储格式: {file_id: {'url': url, 'expire_time': timestamp}})
-download_url_cache = {}
-
-
-def clean_download_url_cache():
-    """清理过期302链接缓存项"""
-    for file_id, item in list(download_url_cache.items()):
-        if time.time() > item["expire_time"]:
-            del download_url_cache[file_id]
-
-
-# 启动api
-local302Api = FastAPI()
-
-
-@local302Api.get("/")
-async def index():
-    return FileResponse("app/public/index.html")
-
-
-@local302Api.get("/get_config")
-async def get_config():
-    return load_config()
-
-
-@local302Api.post("/save_config")
-async def save_config(update_config: dict):
-    """
-    保存配置
-    :param update_config: 更新的配置数据(dict格式)
-    :return: 保存结果
-    """
-    try:
-        # 备份现有配置
-        backup_path = os.path.join(config_folder, "config.bak.yml")
-        shutil.copyfile(os.path.join(config_folder, "config.yml"), backup_path)
-        with open(
-            os.path.join(config_folder, "config.yml"), "w", encoding="utf-8"
-        ) as f:
-            yaml.dump(update_config, f, allow_unicode=True)
-        load_config()
-        return {"message": "配置已保存"}
-    except Exception as e:
-        raise HTTPException(status_code=422, detail=f"配置保存失败: {str(e)}")
-
-
-@local302Api.get("/get_file_url/{file_id}/{job_id}")
-async def get_file_url(file_id: int, job_id: str):
-    """
-    获取文件下载链接
-    :param file_id: 文件ID (必须为正整数)
-    :param job_id: 任务ID (必须为非空字符串)
-    :return: 文件下载链接或错误信息
-    :raises HTTPException 400: 当参数验证失败时
-    """
-    # 参数验证
-    if file_id <= 0:
-        raise HTTPException(status_code=400, detail="文件ID必须为正整数")
-    if not job_id:
-        raise HTTPException(status_code=400, detail="任务ID不能为空")
-    # 检查缓存
-    cache_item = download_url_cache.get(file_id)
-    if cache_item is not None:
-        logger.info(f"从缓存获取302跳转URL: {cache_item['url']}")
-        return RedirectResponse(cache_item["url"], 302)
-
-    # 获取下载URL并存入缓存
-    try:
-        job_id = urllib.parse.unquote(job_id)
-        download_url = get_file_download_info(file_id, job_id)
-        if not download_url:
-            logger.info(f"未找到文件: {file_id}")
-
-        # 存储URL和过期时间
-        download_url_cache[file_id] = {
-            "url": download_url,
-            "expire_time": time.time()
-            + config_manager.get("cache_expire_time", job_id, default=300),
-        }
-        logger.info(f"302跳转成功: {download_url}")
-
-        return RedirectResponse(download_url, 302)
-    except Exception as e:
-        logger.info(f"获取文件下载链接失败: {str(e)}")
-
-    logger.info(f"未找到文件: {file_id}")

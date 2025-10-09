@@ -1,20 +1,20 @@
-import json
 import os
+import json
 
-from app import logger
+from . import logger
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-from app.api import delete_file_by_id
-from app.utils import config_folder
+from .cloud_api import delete_file_by_id
+from .config_manager import config_manager
 
 
-class strmFileWatcher(FileSystemEventHandler):
+class DeleteFileWatcher(FileSystemEventHandler):
     """文件系统事件处理器，用于监控并处理strm文件"""
 
     def __init__(self):
-        logger.info("FileWatcher 初始化完成")
+        logger.info("DeleteFileWatcher 初始化完成")
 
     def on_deleted(self, event):
         """
@@ -36,7 +36,9 @@ class strmFileWatcher(FileSystemEventHandler):
         :return: 文件ID，如果找不到返回None
         """
         try:
-            cache_file_path = os.path.join(config_folder, "cache_files.json")
+            cache_file_path = os.path.join(
+                config_manager.get_config_folder(), "cache_files.json"
+            )
             logger.info(cache_file_path)
             with open(cache_file_path, "r") as f:
                 cache_data = json.load(f)
@@ -57,7 +59,7 @@ class strmFileWatcher(FileSystemEventHandler):
 class FileMonitor:
     def __init__(self):
         self.observer = Observer()
-        self.watcher = strmFileWatcher()
+        self.watcher = DeleteFileWatcher()
         self.is_running = False
 
     def start_monitoring(self, watch_dir):

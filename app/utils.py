@@ -3,7 +3,7 @@
 包含配置加载和读取相关功能
 """
 
-from app import logger
+from . import logger
 import json
 import yaml
 import os
@@ -12,19 +12,37 @@ import time
 import hashlib
 from typing import Any, Optional, Generator
 
-config = None
-# 开发时使用 config/ 相对定位
-config_folder = "config/"
+from .config_manager import config_manager
+
+
+def convert_byte_size(bytes_size, unit: str = "MB") -> float:
+    """
+    将字节大小转换为指定单位的值
+
+    Args:
+        bytes_size: 字节大小
+        unit: 目标单位，支持 'KB', 'MB', 'GB', 'TB' 等，默认 'MB'
+
+    Returns:
+        转换后的值
+    """
+    unit = unit.upper()
+    units = {"KB": 1024, "MB": 1024**2, "GB": 1024**3, "TB": 1024**4}
+    if unit in units:
+        return bytes_size / units[unit]
+    return bytes_size
 
 
 # 读取文件分片
-def read_file_chunks(file_path: str, chunk_size: int = 8 * 1024 * 1024) -> Generator[bytes, None, None]:
+def read_file_chunks(
+    file_path: str, chunk_size: int = 8 * 1024 * 1024
+) -> Generator[bytes, None, None]:
     """读取文件的分片数据
-    
+
     Args:
         file_path: 文件路径
         chunk_size: 分片大小，默认8MB
-    
+
     Yields:
         文件分片数据
     """
@@ -35,13 +53,14 @@ def read_file_chunks(file_path: str, chunk_size: int = 8 * 1024 * 1024) -> Gener
                 break
             yield chunk
 
+
 # 计算文件分片的MD5
 def calculate_chunk_md5(chunk: bytes) -> str:
     """计算文件分片的MD5值
-    
+
     Args:
         chunk: 文件分片数据
-    
+
     Returns:
         MD5哈希值（16进制字符串）
     """
@@ -49,14 +68,15 @@ def calculate_chunk_md5(chunk: bytes) -> str:
     md5_hash.update(chunk)
     return md5_hash.hexdigest()
 
+
 # 计算整个文件的MD5（分块处理，适合大文件）
 def calculate_file_md5(file_path: str, chunk_size: int = 8 * 1024 * 1024) -> str:
     """计算整个文件的MD5值（分块读取，避免内存溢出）
-    
+
     Args:
         file_path: 文件路径
         chunk_size: 读取分块大小，默认8MB
-    
+
     Returns:
         文件的MD5哈希值（16进制字符串）
     """
@@ -64,10 +84,10 @@ def calculate_file_md5(file_path: str, chunk_size: int = 8 * 1024 * 1024) -> str
     total_size = os.path.getsize(file_path)
     processed_size = 0
     last_log_percentage = -1
-    
+
     # 只对较大文件（大于100MB）显示进度
     show_progress = total_size > 100 * 1024 * 1024  # 100MB
-    
+
     with open(file_path, "rb") as f:
         while True:
             chunk = f.read(chunk_size)
@@ -75,70 +95,20 @@ def calculate_file_md5(file_path: str, chunk_size: int = 8 * 1024 * 1024) -> str
                 break
             md5_hash.update(chunk)
             processed_size += len(chunk)
-            
+
             # 计算进度百分比并记录日志（每1%进度或达到100%时记录）
             if show_progress:
                 percentage = int((processed_size / total_size) * 100)
                 if percentage % 2 == 0 and percentage != last_log_percentage:
-                    logger.info(f"文件MD5计算进度: {os.path.basename(file_path)} - {percentage}% ({processed_size // (1024*1024)}MB/{total_size // (1024*1024)}MB)")
+                    logger.info(
+                        f"文件MD5计算进度: {os.path.basename(file_path)} - {percentage}% ({processed_size // (1024*1024)}MB/{total_size // (1024*1024)}MB)"
+                    )
                     last_log_percentage = percentage
-    
+
     # if show_progress:
     #     logger.info(f"文件MD5计算完成: {os.path.basename(file_path)} - MD5: {md5_hash.hexdigest()}")
-    
+
     return md5_hash.hexdigest()
-
-# 加载配置
-def load_config(config_path: str = "config.yaml"):
-    global config
-    if config is None:
-        config_path = os.path.join(config_folder, "config.yml")
-        with open(config_path, "r", encoding="utf-8") as f:
-            config = yaml.safe_load(f)
-    return config
-
-
-def get_config_val(
-    key: str, job_id: Optional[str] = None, default_val: Optional[Any] = None
-) -> Any:
-    """
-    获取配置值
-    :param key: 配置项key
-    :param job_id: 任务ID，可选
-    :return: 配置项value
-    :raises ValueError: 当配置项不存在时抛出
-    """
-    global config
-    if not config:
-        config = load_config()
-
-    if job_id is not None:
-        for job in config["job_list"]:
-            if job is None:
-                logger.info("job任务配置异常")
-
-            if job is not None and job["id"] == job_id:
-                if job.get(key) is not None:
-                    return job.get(key)
-
-    if key not in config and default_val is not None:
-        return default_val
-    elif key not in config and default_val is None:
-        logger.warning(f"配置项 {key} 不存在, 且不存在默认值")
-
-    return config[key]
-
-
-def is_filetype_downloadable(file_type, job_id):
-    """
-    判断是否应该下载指定类型的文件
-    :param file_type: 文件类型配置名
-    :return: bool 是否下载
-    """
-    return (
-        get_config_val(file_type, job_id, default_val=False)
-        and get_config_val("flatten_mode", job_id, default_val=False) == False
-    )
 
 
 def download_file(url, save_path):
@@ -178,7 +148,7 @@ def save_file_ids(cloud_files, job_id=None):
     :param cloud_files: 要记录的字典，键为文件路径，值为文件ID
     :param job_id: 可选的任务ID，用于分组存储
     """
-    file_path = os.path.join(config_folder, "cache_files.json")
+    file_path = os.path.join(config_manager.get_config_folder(), "cache_files.json")
 
     # 如果文件不存在则创建
     if not os.path.exists(file_path):
@@ -212,7 +182,9 @@ def get_file_id(file_path, job_id=None):
     :param file_path: 文件路径
     :return: 文件ID
     """
-    cache_file_path = os.path.join(config_folder, "cache_files.json")
+    cache_file_path = os.path.join(
+        config_manager.get_config_folder(), "cache_files.json"
+    )
     # 从cache_files.json读取所有文件信息
     with open(cache_file_path, "r") as f:
         cache_data = json.load(f)
