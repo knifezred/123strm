@@ -143,7 +143,9 @@ def http_123_request(job_id, payload="", path="", method="GET"):
                 # 操作频繁，暂停30秒
                 time.sleep(30)
             error_msg = f"API请求失败(job_id={job_id}): {response['message']}"
-            logger.error(error_msg, {"job_id": job_id, "response_code": response["code"]})
+            logger.error(
+                error_msg, {"job_id": job_id, "response_code": response["code"]}
+            )
             raise ApiError(
                 error_msg, error_code=response["code"], details={"job_id": job_id}
             )
@@ -312,7 +314,7 @@ def get_file_info(fileId, job_id, max_retries=0):
 
     try:
         response = http_123_request(job_id, path=f"/api/v1/file/detail?fileID={fileId}")
-        return response["data"]["filename"]
+        return response["data"]
     except:
         if max_retries < 3:
             time.sleep(5)

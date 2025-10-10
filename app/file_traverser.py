@@ -61,11 +61,12 @@ class FileTraverser:
             if isinstance(parent_id, str) and "," in parent_id:
                 parent_id_list = parent_id.split(",")
                 for pid in parent_id_list:
-                    # 多文件夹保留当前文件夹目录
-                    folder_info = get_file_info(pid, self.job_id)
-                    folder_path = folder_info if isinstance(folder_info, str) else ""
-                    self.traverse_folders(pid, folder_path)
+                    self.traverse_folders(pid, parent_path)
                 return
+            if parent_path == "":
+                folder_info = get_file_info(parent_id, self.job_id)
+                folder_path = folder_info.get("filename", "") if folder_info else ""
+                parent_path = os.path.join(parent_path, folder_path)
 
             # 处理当前页和所有分页数据
             last_file_id = None
