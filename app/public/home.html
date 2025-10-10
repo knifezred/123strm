@@ -672,6 +672,10 @@
               <label class="block text-sm font-medium text-gray-700 mb-1">本地上传文件夹路径</label>
               <input type="text" id="modal-upload-folder-path" class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus" placeholder="本地文件夹路径，例如：/media/upload/">
               <input type="hidden" id="modal-scrape-media-path" >
+              <div class="flex items-center mt-2">
+                <input type="checkbox" id="generate-strm-switch" class="mr-2 h-4 w-4 text-primary border-gray-300 rounded" checked>
+                <label for="generate-strm-switch" class="text-sm text-gray-700">上传完成后生成STRM文件</label>
+              </div>
             </div>
           </div>
         `;
@@ -684,119 +688,132 @@
         let message = "";
 
         if (title === "刮削指定目录") {
-          const folderId = document
-            .getElementById("modal-cloud-folder-id")
-            .value.trim();
-          const depJobId = document
-            .getElementById("modal-dep-job-id")
-            .value.trim();
-          const mediaPath = document
-            .getElementById("modal-scrape-media-path")
-            .value.trim();
-
-          if (!folderId || !depJobId || !mediaPath) {
-            showToast("error", "输入错误", "请填写所有必填字段");
-            return;
-          }
-
-          // 调用后端API执行刮削任务
-          fetch("/scrape_directory", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              dep_job_id: depJobId,
-              parent_id: folderId,
-              parent_path: mediaPath,
-              output_path: mediaPath, // 使用刮削目录作为输出路径
-            }),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.success) {
-                closeQuickModal();
-                showToast(
-                  "success",
-                  "操作成功",
-                  data.message || "刮削任务已启动"
-                );
-              } else {
-                showToast(
-                  "error",
-                  "操作失败",
-                  data.message || "刮削任务启动失败"
-                );
-              }
-            })
-            .catch((error) => {
-              console.error("刮削任务失败:", error);
-              showToast(
-                "error",
-                "操作失败",
-                "刮削任务启动失败，请检查网络连接"
-              );
-            });
-
           // 由于是异步操作，直接返回
+          handleGenerateStrm();
           return;
         } else if (title === "上传本地目录") {
-          const folderPath = document
-            .getElementById("modal-upload-folder-path")
-            .value.trim();
-          const depJobId = document
-            .getElementById("modal-dep-job-id")
-            .value.trim();
-          const cloudFolderId = document
-            .getElementById("modal-cloud-folder-id")
-            .value.trim();
-          if (!folderPath || !depJobId || !cloudFolderId) {
-            showToast("error", "输入错误", "请填写所有必填字段");
-            return;
-          }
-
-          // 准备上传参数
-          const uploadParams = {
-            dep_job_id: depJobId,
-            folder_path: folderPath,
-            parent_id: cloudFolderId,
-          };
-          console.log(uploadParams);
-
-          // 发送上传请求
-          fetch("/upload_directory", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(uploadParams),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.success) {
-                showToast("success", "上传任务已完成", "任务执行完成");
-                // 清空输入框
-                document.getElementById("upload_folder_id").value = "";
-              } else {
-                showToast(
-                  "error",
-                  "上传失败",
-                  data.message || "上传任务启动失败"
-                );
-              }
-            })
-            .catch((error) => {
-              console.error("上传请求失败:", error);
-              showToast("error", "请求失败", "无法连接到服务器");
-            });
-          success = true;
-          message = "上传任务已启动";
+          handleUploadLocaleFolder();
+          return;
         }
 
         if (success) {
           closeQuickModal();
           showToast("success", "操作成功", message);
         }
+      }
+
+      function handleGenerateStrm() {
+        const folderId = document
+          .getElementById("modal-cloud-folder-id")
+          .value.trim();
+        const depJobId = document
+          .getElementById("modal-dep-job-id")
+          .value.trim();
+        const mediaPath = document
+          .getElementById("modal-scrape-media-path")
+          .value.trim();
+
+        if (!folderId || !depJobId || !mediaPath) {
+          showToast("error", "输入错误", "请填写所有必填字段");
+          return;
+        }
+
+        // 调用后端API执行刮削任务
+        fetch("/scrape_directory", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            dep_job_id: depJobId,
+            parent_id: folderId,
+            parent_path: mediaPath,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              closeQuickModal();
+              showToast(
+                "success",
+                "操作成功",
+                data.message || "刮削任务已启动"
+              );
+            } else {
+              showToast(
+                "error",
+                "操作失败",
+                data.message || "刮削任务启动失败"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("刮削任务失败:", error);
+            showToast("error", "操作失败", "刮削任务启动失败，请检查网络连接");
+          });
+      }
+
+      function handleUploadLocaleFolder() {
+        const folderPath = document
+          .getElementById("modal-upload-folder-path")
+          .value.trim();
+        const depJobId = document
+          .getElementById("modal-dep-job-id")
+          .value.trim();
+        const cloudFolderId = document
+          .getElementById("modal-cloud-folder-id")
+          .value.trim();
+        const generateStrm = document.getElementById(
+          "generate-strm-switch"
+        ).checked;
+
+        const mediaPath = document
+          .getElementById("modal-scrape-media-path")
+          .value.trim();
+
+        if (!folderPath || !depJobId || !cloudFolderId) {
+          showToast("error", "输入错误", "请填写所有必填字段");
+          return;
+        }
+
+        // 准备上传参数
+        const uploadParams = {
+          dep_job_id: depJobId,
+          folder_path: folderPath,
+          parent_id: cloudFolderId,
+          generate_strm: generateStrm,
+          parent_path: mediaPath,
+        };
+        console.log(uploadParams);
+
+        // 发送上传请求
+        fetch("/upload_directory", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(uploadParams),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showToast("success", "上传任务已完成", "任务执行完成");
+              // 清空输入框
+              document.getElementById("upload_folder_id").value = "";
+            } else {
+              showToast(
+                "error",
+                "上传失败",
+                data.message || "上传任务启动失败"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("上传请求失败:", error);
+            showToast("error", "请求失败", "无法连接到服务器");
+          });
+        success = true;
+        message = "上传任务已启动";
       }
 
       // 显示提示消息

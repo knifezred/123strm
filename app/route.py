@@ -147,6 +147,8 @@ async def upload_directory(query: dict):
     :param dep_job_id: 任务ID
     :param folder_path: 文件夹路径
     :param parent_id: 目标文件夹ID
+    :param generate_strm: 是否生成STRM文件
+    :param parent_path: 目标文件夹路径
     :return: 上传结果
     """
     # 验证输入参数
@@ -274,7 +276,13 @@ async def upload_directory(query: dict):
                     logger.info(f"删除空文件夹: {dir_path}")
             except OSError as e:
                 logger.warning(f"删除文件夹失败: {dir_path}, 错误: {str(e)}")
-
+    if query.get("generate_strm", False):
+        # 生成STRM文件
+        job_manager.run_job(
+            job_id=query["dep_job_id"],
+            folder_id=query["parent_id"],
+            folder_path=query["parent_path"],
+        )
     # 返回详细的结果信息
     return {
         "success": True,
