@@ -21,7 +21,7 @@ class JobManager:
         # 存储当前正在运行的任务
         self.running_jobs = set()
 
-    def run_job(self, job_id: str, folder_id: str = None, parent_path: str = None):
+    def run_job(self, job_id: str, folder_id: str = None, parent_path: str = ""):
         """
         运行指定任务ID的完整处理流程
 
