@@ -1,36 +1,34 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>123strm配置</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: "#165DFF",
-              secondary: "#36CFC9",
-              success: "#52C41A",
-              warning: "#FAAD14",
-              danger: "#FF4D4F",
-              dark: "#1D2129",
-              light: "#F2F3F5",
-            },
-            fontFamily: {
-              inter: ["Inter", "system-ui", "sans-serif"],
-            },
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>123strm配置</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#165DFF",
+            secondary: "#36CFC9",
+            success: "#52C41A",
+            warning: "#FAAD14",
+            danger: "#FF4D4F",
+            dark: "#1D2129",
+            light: "#F2F3F5",
+          },
+          fontFamily: {
+            inter: ["Inter", "system-ui", "sans-serif"],
           },
         },
-      };
-    </script>
-    <style type="text/tailwindcss">
-      @layer utilities {
+      },
+    };
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
         .content-auto {
           content-visibility: auto;
         }
@@ -139,1278 +137,1069 @@
         }
       }
     </style>
-  </head>
+</head>
 
-  <body class="font-inter bg-gray-50 text-gray-800 min-h-screen flex flex-col">
-    <!-- 顶部导航栏 -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-      <div
-        class="container mx-auto px-4 py-2 flex items-center justify-between"
-      >
-        <div class="flex items-center space-x-2">
-          <h1 class="text-xl font-semibold text-gray-800">123strm</h1>
+<body class="font-inter bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-2 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <h1 class="text-xl font-semibold text-gray-800">123strm</h1>
+      </div>
+      <nav class="hidden md:flex items-center space-x-6">
+        <a href="/" class="text-gray-600 hover:text-primary transition-colors">首页</a>
+        <a href="/config.html" class="text-primary font-medium">
+          配置管理
+        </a>
+      </nav>
+      <div class="flex items-center space-x-4">
+        <a href="https://www.omgx.cn/archives/1749797289692" target="_blank"
+          class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <path fill="currentColor" fill-rule="evenodd"
+              d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10M12 7.75c-.621 0-1.125.504-1.125 1.125a.75.75 0 0 1-1.5 0a2.625 2.625 0 1 1 4.508 1.829q-.138.142-.264.267a7 7 0 0 0-.571.617c-.22.282-.298.489-.298.662V13a.75.75 0 0 1-1.5 0v-.75c0-.655.305-1.186.614-1.583c.229-.294.516-.58.75-.814q.106-.105.193-.194A1.125 1.125 0 0 0 12 7.75M12 17a1 1 0 1 0 0-2a1 1 0 0 0 0 2"
+              clip-rule="evenodd" />
+          </svg>
+        </a>
+        <a href="https://github.com/knifezred/123strm" target="_blank"
+          class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <path fill="currentColor"
+              d="M12.001 2c-5.525 0-10 4.475-10 10a9.99 9.99 0 0 0 6.837 9.488c.5.087.688-.213.688-.476c0-.237-.013-1.024-.013-1.862c-2.512.463-3.162-.612-3.362-1.175c-.113-.288-.6-1.175-1.025-1.413c-.35-.187-.85-.65-.013-.662c.788-.013 1.35.725 1.538 1.025c.9 1.512 2.337 1.087 2.912.825c.088-.65.35-1.087.638-1.337c-2.225-.25-4.55-1.113-4.55-4.938c0-1.088.387-1.987 1.025-2.687c-.1-.25-.45-1.275.1-2.65c0 0 .837-.263 2.75 1.024a9.3 9.3 0 0 1 2.5-.337c.85 0 1.7.112 2.5.337c1.913-1.3 2.75-1.024 2.75-1.024c.55 1.375.2 2.4.1 2.65c.637.7 1.025 1.587 1.025 2.687c0 3.838-2.337 4.688-4.562 4.938c.362.312.675.912.675 1.85c0 1.337-.013 2.412-.013 2.75c0 .262.188.574.688.474A10.02 10.02 0 0 0 22 12c0-5.525-4.475-10-10-10" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="flex-1 overflow-y-auto bg-gray-50 p-6 pb-24">
+    <div class="container mx-auto max-w-6xl">
+      <!-- 欢迎区域 -->
+      <div class="rounded-xl bg-gradient-to-r from-primary/90 to-primary p-6 mb-8 text-white shadow-lg">
+        <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold">123strm配置</h1>
+        <p class="text-white/90 mt-2">配置123strm相关参数和任务，自定义您的媒体流媒体体验</p>
+      </div>
+      <!-- 任务配置区域 -->
+      <div id="task-config" class="bg-white rounded-xl card-shadow p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-semibold flex items-center">
+            <i class="fas fa-tasks text-primary mr-2"></i> 任务配置
+          </h2>
+          <button id="add-task-btn"
+            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 flex items-center btn-hover">
+            <i class="fas fa-plus mr-2"></i> 添加任务
+          </button>
         </div>
-        <nav class="hidden md:flex items-center space-x-6">
-          <a href="/" class="text-gray-600 hover:text-primary transition-colors">首页</a>
-          <a
-            href="/config.html"
-            class="text-primary font-medium"
-          >
-            配置管理
-          </a>
-        </nav>
-        <div class="flex items-center space-x-4">
-          <a
-            href="https://www.omgx.cn/archives/1749797289692"
-            target="_blank"
-            class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="currentColor"
-                fill-rule="evenodd"
-                d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10M12 7.75c-.621 0-1.125.504-1.125 1.125a.75.75 0 0 1-1.5 0a2.625 2.625 0 1 1 4.508 1.829q-.138.142-.264.267a7 7 0 0 0-.571.617c-.22.282-.298.489-.298.662V13a.75.75 0 0 1-1.5 0v-.75c0-.655.305-1.186.614-1.583c.229-.294.516-.58.75-.814q.106-.105.193-.194A1.125 1.125 0 0 0 12 7.75M12 17a1 1 0 1 0 0-2a1 1 0 0 0 0 2"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </a>
-          <a
-            href="https://github.com/knifezred/123strm"
-            target="_blank"
-            class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="currentColor"
-                d="M12.001 2c-5.525 0-10 4.475-10 10a9.99 9.99 0 0 0 6.837 9.488c.5.087.688-.213.688-.476c0-.237-.013-1.024-.013-1.862c-2.512.463-3.162-.612-3.362-1.175c-.113-.288-.6-1.175-1.025-1.413c-.35-.187-.85-.65-.013-.662c.788-.013 1.35.725 1.538 1.025c.9 1.512 2.337 1.087 2.912.825c.088-.65.35-1.087.638-1.337c-2.225-.25-4.55-1.113-4.55-4.938c0-1.088.387-1.987 1.025-2.687c-.1-.25-.45-1.275.1-2.65c0 0 .837-.263 2.75 1.024a9.3 9.3 0 0 1 2.5-.337c.85 0 1.7.112 2.5.337c1.913-1.3 2.75-1.024 2.75-1.024c.55 1.375.2 2.4.1 2.65c.637.7 1.025 1.587 1.025 2.687c0 3.838-2.337 4.688-4.562 4.938c.362.312.675.912.675 1.85c0 1.337-.013 2.412-.013 2.75c0 .262.188.574.688.474A10.02 10.02 0 0 0 22 12c0-5.525-4.475-10-10-10"
-              />
-            </svg>
-          </a>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  ID
+                </th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  根文件夹ID
+                </th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  输出路径
+                </th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  操作
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="job_table"></tbody>
+          </table>
         </div>
       </div>
-    </header>
 
-    <!-- 主内容区 -->
-    <main class="flex-1 overflow-y-auto bg-gray-50 p-6 pb-24">
-      <div class="container mx-auto max-w-6xl">
-        <!-- 欢迎区域 -->
-        <div class="rounded-xl bg-gradient-to-r from-primary/90 to-primary p-6 mb-8 text-white shadow-lg">
-          <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold">123strm配置</h1>
-          <p class="text-white/90 mt-2">配置123strm相关参数和任务，自定义您的媒体流媒体体验</p>
-        </div>
-        <!-- 任务配置区域 -->
-        <div id="task-config" class="bg-white rounded-xl card-shadow p-6 mb-8">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold flex items-center">
-              <i class="fas fa-tasks text-primary mr-2"></i> 任务配置
-            </h2>
-            <button
-              id="add-task-btn"
-              class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 flex items-center btn-hover"
-            >
-              <i class="fas fa-plus mr-2"></i> 添加任务
-            </button>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th
-                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    ID
-                  </th>
-                  <th
-                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    根文件夹ID
-                  </th>
-                  <th
-                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    输出路径
-                  </th>
-                  <th
-                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    操作
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                class="bg-white divide-y divide-gray-200"
-                id="job_table"
-              ></tbody>
-            </table>
-          </div>
+      <!-- 配置区域 -->
+      <div class="bg-white rounded-xl card-shadow p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-semibold flex items-center">
+            <i class="fas fa-cog text-primary mr-2"></i> 系统配置
+          </h2>
         </div>
 
-        <!-- 配置区域 -->
-        <div class="bg-white rounded-xl card-shadow p-6 mb-8">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold flex items-center">
-              <i class="fas fa-cog text-primary mr-2"></i> 系统配置
-            </h2>
-          </div>
-
-          <div class="flex flex-col md:flex-row">
-            <!-- 左侧标签页导航 -->
-            <div class="md:w-64 flex-shrink-0 mb-6 md:mb-0 md:mr-6">
-              <div class="border rounded-lg overflow-hidden">
-                <button 
-                  class="tab-button w-full text-left px-4 py-3 font-medium text-primary bg-primary/5 border-l-4 border-primary flex items-center"
-                  data-tab="system-config"
-                >
-                  <i class="fas fa-server mr-2 w-5 text-center"></i> 系统配置
-                </button>
-                <button 
-                  class="tab-button w-full text-left px-4 py-3 font-medium text-gray-600 hover:bg-gray-50 border-l-4 border-transparent flex items-center"
-                  data-tab="generate-config"
-                >
-                  <i class="fas fa-file-code mr-2 w-5 text-center"></i> 生成配置
-                </button>
-                <button 
-                  class="tab-button w-full text-left px-4 py-3 font-medium text-gray-600 hover:bg-gray-50 border-l-4 border-transparent flex items-center"
-                  data-tab="file-config"
-                >
-                  <i class="fas fa-file mr-2 w-5 text-center"></i> 文件处理
-                </button>
-              </div>
+        <div class="flex flex-col md:flex-row">
+          <!-- 左侧标签页导航 -->
+          <div class="md:w-64 flex-shrink-0 mb-6 md:mb-0 md:mr-6">
+            <div class="border rounded-lg overflow-hidden">
+              <button
+                class="tab-button w-full text-left px-4 py-3 font-medium text-primary bg-primary/5 border-l-4 border-primary flex items-center"
+                data-tab="system-config">
+                <i class="fas fa-server mr-2 w-5 text-center"></i> 系统配置
+              </button>
+              <button
+                class="tab-button w-full text-left px-4 py-3 font-medium text-gray-600 hover:bg-gray-50 border-l-4 border-transparent flex items-center"
+                data-tab="generate-config">
+                <i class="fas fa-file-code mr-2 w-5 text-center"></i> 生成配置
+              </button>
+              <button
+                class="tab-button w-full text-left px-4 py-3 font-medium text-gray-600 hover:bg-gray-50 border-l-4 border-transparent flex items-center"
+                data-tab="file-config">
+                <i class="fas fa-file mr-2 w-5 text-center"></i> 文件处理
+              </button>
             </div>
+          </div>
 
-            <!-- 标签页内容 -->
-            <div class="flex-grow">
-              <div id="system-config" class="tab-content">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <div class="mb-6">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >定时任务cron表达式</label
-                      >
-                      <div class="config-item-wrapper">
-                        <input
-                          type="text"
-                          id="cron"
-                          value="0 1 * * *"
-                          class="custom-input"
-                        />
-                      </div>
-                    </div>
-                    <div class="mb-6">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >Client Id</label
-                      >
-                      <div class="config-item-wrapper">
-                        <input
-                          type="text"
-                          id="client_id"
-                          value=""
-                          class="custom-input"
-                        />
-                      </div>
-                      <p class="text-xs text-gray-500 mt-1">
-                        https://www.123pan.com/developer 注册获取
-                      </p>
-                    </div>
-                    
-                    <div class="mb-6">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >Client Secret</label
-                      >
-                      <div class="config-item-wrapper">
-                        <input
-                          type="password"
-                          id="client_secret"
-                          value=""
-                          class="custom-input"
-                        />
-                      </div>
-                    </div>
-                    
-                  </div>
-                  
-                  <div>
-                    
-                    <div class="mb-6">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >程序启动后立即执行任务</label
-                      >
-                      <div class="config-item-wrapper flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-700">可选，默认 False</span>
-                        <label class="custom-checkbox">
-                          <input
-                            type="checkbox"
-                            id="running_on_start"
-                            class="sr-only peer"
-                          />
-                          <div class="checkbox-toggle"></div>
-                        </label>
-                      </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >文件删除监听</label
-                      >
-                      <div class="config-item-wrapper flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-700">删除本地文件时同步删除云盘文件，默认关闭</span>
-                        <label class="custom-checkbox">
-                          <input
-                            type="checkbox"
-                            id="watch_delete"
-                            class="sr-only peer"
-                          />
-                          <div class="checkbox-toggle"></div>
-                        </label>
-                      </div>
+          <!-- 标签页内容 -->
+          <div class="flex-grow">
+            <div id="system-config" class="tab-content">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">定时任务cron表达式</label>
+                    <div class="config-item-wrapper">
+                      <input type="text" id="cron" value="0 1 * * *" class="custom-input" />
                     </div>
                   </div>
+                  <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Client Id</label>
+                    <div class="config-item-wrapper">
+                      <input type="text" id="client_id" value="" class="custom-input" />
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
+                      https://www.123pan.com/developer 注册获取
+                    </p>
+                  </div>
+
+                  <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Client Secret</label>
+                    <div class="config-item-wrapper">
+                      <input type="password" id="client_secret" value="" class="custom-input" />
+                    </div>
+                  </div>
+
                 </div>
-              </div>
 
-              <div id="generate-config" class="tab-content hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <div class="mb-6">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >302链接（推荐使用）</label
-                      >
-                      <div class="config-item-wrapper flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-700">使用官方下载链接播放（默认True）</span>
-                        <label class="custom-checkbox">
-                          <input
-                            type="checkbox"
-                            id="use_302_url"
-                            checked
-                            class="sr-only peer"
-                          />
-                          <div class="checkbox-toggle"></div>
-                        </label>
-                      </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >代理地址</label
-                      >
-                      <div class="config-item-wrapper">
-                        <input
-                          type="text"
-                          id="proxy"
-                          value="http://127.0.0.1:1236"
-                          class="custom-input"
-                        />
-                      </div>
-                      <p class="text-xs text-gray-500 mt-1">
-                        必须配置，http://nas_ip:1236（默认 http://127.0.0.1:1236）
-                      </p>
-                    </div>
+                <div>
 
-                    <div class="mb-6">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >302链接缓存过期时间(秒)</label
-                      >
-                      <div class="config-item-wrapper">
-                        <input
-                          type="number"
-                          id="cache_expire_time"
-                          value="300"
-                          class="custom-input"
-                        />
-                      </div>
-                      <p class="text-xs text-gray-500 mt-1">默认5分钟</p>
-                    </div>
-                    <div class="mb-6">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >本地挂载路径前缀（302链接开启时无效）</label
-                      >
-                      <div class="config-item-wrapper">
-                        <input
-                          type="text"
-                          id="path_prefix"
-                          value=""
-                          class="custom-input"
-                          placeholder="/volume1/cloud/..."
-                        />
-                      </div>
-                    </div>
-                    
-                  </div>
-                  
-                  <div>
-                    
-                    <div class="mb-6">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >覆盖模式</label
-                      >
-                      <div class="config-item-wrapper flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-700">重新生成已存在的strm文件</span>
-                        <label class="custom-checkbox">
-                          <input
-                            type="checkbox"
-                            id="overwrite"
-                            class="sr-only peer"
-                          />
-                          <div class="checkbox-toggle"></div>
-                        </label>
-                      </div>
-                    </div>    
-                    
-                    <div class="mb-6">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >平铺模式</label
-                      >
-                      <div class="config-item-wrapper flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-700"
-                          >开启后强制关闭图片、nfo等文件下载</span
-                        >
-                        <label class="custom-checkbox">
-                          <input
-                            type="checkbox"
-                            id="flatten_mode"
-                            class="sr-only peer"
-                          />
-                          <div class="checkbox-toggle"></div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div id="file-config" class="tab-content hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <!-- 视频文件配置 -->
-                  <div class="border border-gray-200 rounded-lg p-4">
-                    
-                    <div class="mb-4">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >视频文件后缀</label
-                      >
-                      <div class="config-item-wrapper">
-                        <input
-                          type="text"
-                          id="video_extensions"
-                          value=".mp4,.mkv,.ts,.iso"
-                          class="custom-input"
-                        />
-                      </div>
-                      <p class="text-xs text-gray-500 mt-1">
-                        默认 .mp4, .mkv, .ts, .iso
-                      </p>
-                    </div>
-                    
+                  <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">程序启动后立即执行任务</label>
                     <div class="config-item-wrapper flex items-center justify-between">
-                      <span class="text-sm font-medium text-gray-700">下载 .nfo 文件</span>
+                      <span class="text-sm font-medium text-gray-700">可选，默认 False</span>
                       <label class="custom-checkbox">
-                        <input
-                          type="checkbox"
-                          id="nfo"
-                          class="sr-only peer"
-                        />
+                        <input type="checkbox" id="running_on_start" class="sr-only peer" />
                         <div class="checkbox-toggle"></div>
                       </label>
                     </div>
                   </div>
-                  
-                  <!-- 图片文件配置 -->
-                  <div class="border border-gray-200 rounded-lg p-4">
-                    <div class="config-item-wrapper flex items-center justify-between mb-4">
-                      <span class="text-sm font-medium text-gray-700">下载图片文件</span>
+
+                  <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">文件删除监听</label>
+                    <div class="config-item-wrapper flex items-center justify-between">
+                      <span class="text-sm font-medium text-gray-700">删除本地文件时，是否同步删除云盘文件</span>
                       <label class="custom-checkbox">
-                        <input
-                          type="checkbox"
-                          id="image"
-                          class="sr-only peer"
-                        />
+                        <input type="checkbox" id="watch_delete" class="sr-only peer" />
                         <div class="checkbox-toggle"></div>
                       </label>
-                    </div>
-                    <div class="space-y-3">
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1"
-                          >图片文件后缀</label
-                        >
-                        <div class="config-item-wrapper">
-                          <input
-                            type="text"
-                            id="image_extensions"
-                            value=".jpg,.jpeg,.png,.webp"
-                            class="custom-input"
-                          />
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">
-                          默认 .jpg, .jpeg, .png, .webp
-                        </p>
-                      </div>
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1"
-                          >下载图片文件名后缀</label
-                        >
-                        <div class="config-item-wrapper">
-                          <input
-                            type="text"
-                            id="download_image_suffix"
-                            value=""
-                            class="custom-input"
-                          />
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">例如只想下载*poster、*background等文件时可以配置该字段为poster,background</p>
-                      </div>
                     </div>
                   </div>
-                
-                  <!-- 字幕文件配置 -->
-                  <div class="border border-gray-200 rounded-lg p-4">
-                    <div class="config-item-wrapper flex items-center justify-between mb-4">
-                      <span class="text-sm font-medium text-gray-700">下载字幕文件</span>
+
+                  <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      本地文件清理
+                    </label>
+                    <div class="config-item-wrapper flex items-center justify-between">
+                      <span class="text-sm font-medium text-gray-700">任务执行完成后，是否删除本地非云盘文件</span>
                       <label class="custom-checkbox">
-                        <input
-                          type="checkbox"
-                          id="subtitle"
-                          class="sr-only peer"
-                        />
+                        <input type="checkbox" id="clean_local" class="sr-only peer" />
                         <div class="checkbox-toggle"></div>
                       </label>
                     </div>
-                    <div class="mb-2">
-                      <label class="block text-sm font-medium text-gray-700 mb-1"
-                        >字幕文件后缀</label
-                      >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="generate-config" class="tab-content hidden">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">302链接（推荐使用）</label>
+                    <div class="config-item-wrapper flex items-center justify-between">
+                      <span class="text-sm font-medium text-gray-700">使用官方下载链接播放（默认True）</span>
+                      <label class="custom-checkbox">
+                        <input type="checkbox" id="use_302_url" checked class="sr-only peer" />
+                        <div class="checkbox-toggle"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">代理地址</label>
+                    <div class="config-item-wrapper">
+                      <input type="text" id="proxy" value="http://127.0.0.1:1236" class="custom-input" />
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
+                      必须配置，http://nas_ip:1236（默认 http://127.0.0.1:1236）
+                    </p>
+                  </div>
+
+                  <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">302链接缓存过期时间(秒)</label>
+                    <div class="config-item-wrapper">
+                      <input type="number" id="cache_expire_time" value="300" class="custom-input" />
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">默认5分钟</p>
+                  </div>
+                  <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">本地挂载路径前缀（302链接开启时无效）</label>
+                    <div class="config-item-wrapper">
+                      <input type="text" id="path_prefix" value="" class="custom-input"
+                        placeholder="/volume1/cloud/..." />
+                    </div>
+                  </div>
+
+                </div>
+
+                <div>
+
+                  <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">覆盖模式</label>
+                    <div class="config-item-wrapper flex items-center justify-between">
+                      <span class="text-sm font-medium text-gray-700">重新生成已存在的strm文件</span>
+                      <label class="custom-checkbox">
+                        <input type="checkbox" id="overwrite" class="sr-only peer" />
+                        <div class="checkbox-toggle"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">平铺模式</label>
+                    <div class="config-item-wrapper flex items-center justify-between">
+                      <span class="text-sm font-medium text-gray-700">开启后强制关闭图片、nfo等文件下载</span>
+                      <label class="custom-checkbox">
+                        <input type="checkbox" id="flatten_mode" class="sr-only peer" />
+                        <div class="checkbox-toggle"></div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="file-config" class="tab-content hidden">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 视频文件配置 -->
+                <div class="border border-gray-200 rounded-lg p-4">
+
+                  <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">视频文件后缀</label>
+                    <div class="config-item-wrapper">
+                      <input type="text" id="video_extensions" value=".mp4,.mkv,.ts,.iso" class="custom-input" />
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
+                      默认 .mp4, .mkv, .ts, .iso
+                    </p>
+                  </div>
+
+                  <div class="config-item-wrapper flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-700">下载 .nfo 文件</span>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="nfo" class="sr-only peer" />
+                      <div class="checkbox-toggle"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- 图片文件配置 -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <div class="config-item-wrapper flex items-center justify-between mb-4">
+                    <span class="text-sm font-medium text-gray-700">下载图片文件</span>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="image" class="sr-only peer" />
+                      <div class="checkbox-toggle"></div>
+                    </label>
+                  </div>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">图片文件后缀</label>
                       <div class="config-item-wrapper">
-                        <input
-                          type="text"
-                          id="subtitle_extensions"
-                          value=".srt,.ass,.sub"
-                          class="custom-input"
-                        />
+                        <input type="text" id="image_extensions" value=".jpg,.jpeg,.png,.webp" class="custom-input" />
                       </div>
-                      <p class="text-xs text-gray-500 mt-1">默认 .srt, .ass, .sub</p>
+                      <p class="text-xs text-gray-500 mt-1">
+                        默认 .jpg, .jpeg, .png, .webp
+                      </p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">下载图片文件名后缀</label>
+                      <div class="config-item-wrapper">
+                        <input type="text" id="download_image_suffix" value="" class="custom-input" />
+                      </div>
+                      <p class="text-xs text-gray-500 mt-1">例如只想下载*poster、*background等文件时可以配置该字段为poster,background</p>
                     </div>
                   </div>
-                  
                 </div>
+
+                <!-- 字幕文件配置 -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <div class="config-item-wrapper flex items-center justify-between mb-4">
+                    <span class="text-sm font-medium text-gray-700">下载字幕文件</span>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="subtitle" class="sr-only peer" />
+                      <div class="checkbox-toggle"></div>
+                    </label>
+                  </div>
+                  <div class="mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">字幕文件后缀</label>
+                    <div class="config-item-wrapper">
+                      <input type="text" id="subtitle_extensions" value=".srt,.ass,.sub" class="custom-input" />
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">默认 .srt, .ass, .sub</p>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
         </div>
-    </main>
+      </div>
+  </main>
 
-    <!-- 底部操作按钮 -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex justify-between items-center shadow-lg">
-      <div class="text-sm text-gray-500">
-        <i class="fas fa-info-circle mr-1"></i> 修改配置后请点击保存按钮
-      </div>
-      <div class="flex justify-end space-x-4">
-        <button
-          id="reset-config-btn"
-          class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 btn-hover"
-          onclick="getConfigData()"
-        >
-          <i class="fas fa-redo-alt mr-2"></i> 重置
-        </button>
-        <button
-          id="save-config-btn"
-          class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 btn-hover"
-          onclick="saveConfig()"
-        >
-          <i class="fas fa-save mr-2"></i> 保存配置
-        </button>
-      </div>
+  <!-- 底部操作按钮 -->
+  <div
+    class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex justify-between items-center shadow-lg">
+    <div class="text-sm text-gray-500">
+      <i class="fas fa-info-circle mr-1"></i> 修改配置后请点击保存按钮
     </div>
-
-    <!-- 模态框：添加任务 -->
-    <div
-      id="add-task-modal"
-      class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center"
-    >
-      <div
-        class="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 transform transition-all duration-300 scale-95 opacity-0"
-        id="modal-content"
-      >
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold" id="modal-title">添加新任务</h3>
-          <button id="close-modal" class="text-gray-400 hover:text-gray-600">
-            <i class="fa fa-times"></i>
-          </button>
-        </div>
-        <div class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <div class="mb-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >任务ID</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="text"
-                    id="job_id"
-                    class="custom-input"
-                    placeholder="例如：国产剧"
-                  />
-                </div>
-              </div>
-              <div class="mb-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >根文件夹ID</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="text"
-                    id="job_root_folder_id"
-                    class="custom-input"
-                    placeholder="浏览器打开对应文件夹获取"
-                  />
-                </div>
-              </div>
-              <div class="mb-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >输出路径</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="text"
-                    id="job_target_dir"
-                    class="custom-input"
-                    placeholder="/media/..."
-                  />
-                </div>
-              </div>
-              <div class="mb-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >Client Id (留空使用系统配置)</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="text"
-                    id="job_client_id"
-                    value=""
-                    class="custom-input"
-                  />
-                </div>
-              </div>
-              <div class="mb-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >Client Secret (留空使用系统配置)</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="password"
-                    id="job_client_secret"
-                    value=""
-                    class="custom-input"
-                  />
-                </div>
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >默认文件处理选项</label
-              >
-              <div class="space-y-3 p-4 border border-gray-200 rounded-lg mb-4">
-                <div class="config-item-wrapper flex items-center justify-between">
-                  <span>下载字幕文件</span>
-                  <label class="custom-checkbox">
-                      <input type="checkbox" id="job_subtitle" />
-                      <div class="checkbox-toggle"></div>
-                    </label>
-                </div>
-                <div class="config-item-wrapper flex items-center justify-between">
-                  <span>下载图片文件</span>
-                  <label class="custom-checkbox">
-                      <input type="checkbox" id="job_image" />
-                      <div class="checkbox-toggle"></div>
-                    </label>
-                </div>
-                <div class="config-item-wrapper flex items-center justify-between">
-                  <span>下载 .nfo 文件</span>
-                  <label class="custom-checkbox">
-                      <input type="checkbox" id="job_nfo" />
-                      <div class="checkbox-toggle"></div>
-                    </label>
-                </div>
-                <div class="config-item-wrapper flex items-center justify-between">
-                  <span>覆盖模式</span>
-                  <label class="custom-checkbox">
-                      <input type="checkbox" id="job_overwrite" />
-                      <div class="checkbox-toggle"></div>
-                    </label>
-                </div>
-              </div>
-              <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >302链接（推荐使用）</label
-                >
-                <div class="config-item-wrapper flex items-center justify-between">
-                  <span>使用官方下载链接播放（默认True）</span>
-                  <label class="custom-checkbox">
-                    <input type="checkbox" id="job_use_302_url" />
-                    <div class="checkbox-toggle"></div>
-                  </label>
-                </div>
-              </div>
-              <div class="mb-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >本地挂载路径前缀（302链接开启时无效）</label
-                >
-                <div class="config-item-wrapper">
-                  <input
-                    type="text"
-                    id="job_path_prefix"
-                    value=""
-                    class="custom-input"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="flex justify-end mt-6 space-x-3">
-          <button
-            id="cancel-add-task"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 btn-hover"
-          >
-            取消
-          </button>
-          <button
-            id="confirm-add-task"
-            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 btn-hover"
-          >
-            确认
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 提示消息 -->
-    <div
-      id="toast"
-      class="fixed top-6 right-0 bg-white rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 z-50 flex items-center"
-    >
-      <div
-        id="toast-icon"
-        class="w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-green-100"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-        >
-          <path
-            fill="currentColor"
-            d="M2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8m6-7a7 7 0 1 0 0 14A7 7 0 0 0 8 1m2.854 5.854a.5.5 0 0 0-.708-.708L7.25 9.043L5.854 7.646a.5.5 0 1 0-.708.708l1.75 1.75a.5.5 0 0 0 .708 0z"
-          />
-        </svg>
-      </div>
-      <div>
-        <h4 id="toast-title" class="font-medium text-gray-900">操作成功</h4>
-        <p id="toast-message" class="text-sm text-gray-500">配置已保存</p>
-      </div>
-      <button id="close-toast" class="ml-4 text-gray-400 hover:text-gray-600">
-        <i class="fa fa-times"></i>
+    <div class="flex justify-end space-x-4">
+      <button id="reset-config-btn"
+        class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 btn-hover"
+        onclick="getConfigData()">
+        <i class="fas fa-redo-alt mr-2"></i> 重置
+      </button>
+      <button id="save-config-btn"
+        class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 btn-hover"
+        onclick="saveConfig()">
+        <i class="fas fa-save mr-2"></i> 保存配置
       </button>
     </div>
+  </div>
 
-    <script>
-      var defaultConfig = {
-        cron: "0 1 * * *",
-        client_id: "",
-        client_secret: "",
-        use_302_url: true,
-        proxy: "http://127.0.0.1:1236",
-        cache_expire_time: 300,
-        video_extensions: [".mp4", ".mkv", ".ts", ".iso"],
-        subtitle_extensions: [".srt", ".ass", ".sub"],
-        download_image_suffix: [],
-        image_extensions: [".jpg", ".jpeg", ".png", ".webp"],
-        subtitle: false,
-        image: false,
-        nfo: false,
-        running_on_start: false,
-        overwrite: false,
-        watch_delete: false,
-        flatten_mode: false,
-        target_dir: "",
-        path_prefix: "",
-        root_folder_id: "",
-        id: "",
-        job_list: [],
-      };
-      var currentConfig = {};
-      var currentJobId = "";
-      function getConfigData() {
-        // 从服务器获取配置数据
-        fetch("/get_config")
-          .then((response) => response.json())
-          .then((data) => {
-            console.log(data);
-            // 更新配置数据
-            currentConfig = data;
-            loadDefaults();
-            if (currentConfig.job_list.length > 0) {
-              reloadJobTable();
-            }
-          })
-          .catch((error) => {
-            console.error("获取配置数据失败:", error);
-          });
-      }
+  <!-- 模态框：添加任务 -->
+  <div id="add-task-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 transform transition-all duration-300 scale-95 opacity-0"
+      id="modal-content">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold" id="modal-title">添加新任务</h3>
+        <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <div class="mb-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">任务ID</label>
+              <div class="config-item-wrapper">
+                <input type="text" id="job_id" class="custom-input" placeholder="例如：国产剧" />
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">根文件夹ID</label>
+              <div class="config-item-wrapper">
+                <input type="text" id="job_root_folder_id" class="custom-input" placeholder="浏览器打开对应文件夹获取" />
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">输出路径 (请以 / 结尾)</label>
+              <div class="config-item-wrapper">
+                <input type="text" id="job_target_dir" class="custom-input" placeholder="/media/..." />
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Client Id (留空使用系统配置)</label>
+              <div class="config-item-wrapper">
+                <input type="text" id="job_client_id" value="" class="custom-input" />
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Client Secret (留空使用系统配置)</label>
+              <div class="config-item-wrapper">
+                <input type="password" id="job_client_secret" value="" class="custom-input" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">默认文件处理选项</label>
+            <div class="space-y-3 p-4 border border-gray-200 rounded-lg mb-4">
+              <div class="config-item-wrapper flex items-center justify-between">
+                <span>下载字幕文件</span>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="job_subtitle" />
+                  <div class="checkbox-toggle"></div>
+                </label>
+              </div>
+              <div class="config-item-wrapper flex items-center justify-between">
+                <span>下载图片文件</span>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="job_image" />
+                  <div class="checkbox-toggle"></div>
+                </label>
+              </div>
+              <div class="config-item-wrapper flex items-center justify-between">
+                <span>下载 .nfo 文件</span>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="job_nfo" />
+                  <div class="checkbox-toggle"></div>
+                </label>
+              </div>
+              <div class="config-item-wrapper flex items-center justify-between">
+                <span>覆盖模式</span>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="job_overwrite" />
+                  <div class="checkbox-toggle"></div>
+                </label>
+              </div>
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">302链接（推荐使用）</label>
+              <div class="config-item-wrapper flex items-center justify-between">
+                <span>使用官方下载链接播放（默认True）</span>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="job_use_302_url" />
+                  <div class="checkbox-toggle"></div>
+                </label>
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">本地挂载路径前缀（302链接开启时无效）</label>
+              <div class="config-item-wrapper">
+                <input type="text" id="job_path_prefix" value="" class="custom-input" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end mt-6 space-x-3">
+        <button id="cancel-add-task"
+          class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 btn-hover">
+          取消
+        </button>
+        <button id="confirm-add-task"
+          class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 btn-hover">
+          确认
+        </button>
+      </div>
+    </div>
+  </div>
 
-      function reloadJobTable() {
-        document.getElementById("job_table").innerHTML = "";
-        job_tbody = "";
-        currentConfig.job_list.forEach((job) => {
-          job_tbody +=
-            '<tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">' +
-            job.id +
-            '</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">' +
-            job.root_folder_id +
-            '</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">' +
-            job.target_dir +
-            '</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><button class="text-primary hover:text-primary/80 mr-3" onclick=editJob("' +
-            job.id +
-            '")>编辑 </button><button class="text-danger hover:text-danger/80" onclick=deleteJob("' +
-            job.id +
-            '")>删除</button></td></tr>';
+  <!-- 提示消息 -->
+  <div id="toast"
+    class="fixed top-6 right-0 bg-white rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 z-50 flex items-center">
+    <div id="toast-icon" class="w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-green-100">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+        <path fill="currentColor"
+          d="M2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8m6-7a7 7 0 1 0 0 14A7 7 0 0 0 8 1m2.854 5.854a.5.5 0 0 0-.708-.708L7.25 9.043L5.854 7.646a.5.5 0 1 0-.708.708l1.75 1.75a.5.5 0 0 0 .708 0z" />
+      </svg>
+    </div>
+    <div>
+      <h4 id="toast-title" class="font-medium text-gray-900">操作成功</h4>
+      <p id="toast-message" class="text-sm text-gray-500">配置已保存</p>
+    </div>
+    <button id="close-toast" class="ml-4 text-gray-400 hover:text-gray-600">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+
+  <script>
+    var defaultConfig = {
+      cron: "0 1 * * *",
+      client_id: "",
+      client_secret: "",
+      use_302_url: true,
+      proxy: "http://127.0.0.1:1236",
+      cache_expire_time: 300,
+      video_extensions: [".mp4", ".mkv", ".ts", ".iso"],
+      subtitle_extensions: [".srt", ".ass", ".sub"],
+      download_image_suffix: [],
+      image_extensions: [".jpg", ".jpeg", ".png", ".webp"],
+      subtitle: false,
+      image: false,
+      nfo: false,
+      running_on_start: false,
+      overwrite: false,
+      watch_delete: false,
+      clean_local: false,
+      flatten_mode: false,
+      target_dir: "",
+      path_prefix: "",
+      root_folder_id: "",
+      id: "",
+      job_list: [],
+    };
+    var currentConfig = {};
+    var currentJobId = "";
+    function getConfigData() {
+      // 从服务器获取配置数据
+      fetch("/get_config")
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          // 更新配置数据
+          currentConfig = data;
+          loadDefaults();
+          if (currentConfig.job_list.length > 0) {
+            reloadJobTable();
+          }
+        })
+        .catch((error) => {
+          console.error("获取配置数据失败:", error);
         });
-        document.getElementById("job_table").innerHTML = job_tbody;
-      }
+    }
 
-      function loadConfigKey(elKey, configKey) {
-        var keyValue = currentConfig[configKey] ?? defaultConfig[configKey];
-        if (Array.isArray(keyValue)) {
-          // 判断是否是数组
-          document.getElementById(elKey).value = keyValue.join(",");
-        } else if (document.getElementById(elKey).type == "checkbox") {
-          // 判断input是否是checkbox
-          document.getElementById(elKey).checked = keyValue;
-        } else {
-          document.getElementById(elKey).value = keyValue;
-        }
-      }
+    function reloadJobTable() {
+      document.getElementById("job_table").innerHTML = "";
+      job_tbody = "";
+      currentConfig.job_list.forEach((job) => {
+        job_tbody +=
+          '<tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">' +
+          job.id +
+          '</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">' +
+          job.root_folder_id +
+          '</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">' +
+          job.target_dir +
+          '</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><button class="text-primary hover:text-primary/80 mr-3" onclick=editJob("' +
+          job.id +
+          '")>编辑 </button><button class="text-danger hover:text-danger/80" onclick=deleteJob("' +
+          job.id +
+          '")>删除</button></td></tr>';
+      });
+      document.getElementById("job_table").innerHTML = job_tbody;
+    }
 
-      function loadJobKey(elKey, jobKey, job) {
-        var keyValue =
-          job[jobKey] ?? currentConfig[jobKey] ?? defaultConfig[jobKey];
-        if (Array.isArray(keyValue)) {
-          // 判断是否是数组
-          document.getElementById(elKey).value = keyValue.join(",");
-        } else if (document.getElementById(elKey).type == "checkbox") {
-          // 判断input是否是checkbox
-          document.getElementById(elKey).checked = keyValue;
-        } else {
-          document.getElementById(elKey).value = keyValue;
-        }
+    function loadConfigKey(elKey, configKey) {
+      var keyValue = currentConfig[configKey] ?? defaultConfig[configKey];
+      if (Array.isArray(keyValue)) {
+        // 判断是否是数组
+        document.getElementById(elKey).value = keyValue.join(",");
+      } else if (document.getElementById(elKey).type == "checkbox") {
+        // 判断input是否是checkbox
+        document.getElementById(elKey).checked = keyValue;
+      } else {
+        document.getElementById(elKey).value = keyValue;
       }
+    }
 
-      function loadDefaults() {
-        var keys = [
-          "cron",
-          "client_id",
-          "client_secret",
-          "use_302_url",
-          "proxy",
-          "cache_expire_time",
-          "video_extensions",
-          "subtitle_extensions",
-          "download_image_suffix",
-          "image_extensions",
-          "subtitle",
-          "image",
-          "nfo",
-          "running_on_start",
-          "overwrite",
-          "watch_delete",
-          "flatten_mode",
-          "path_prefix",
-        ];
-        keys.forEach((key) => {
-          loadConfigKey(key, key);
-        });
-        handleFileOptionsToggle();
+    function loadJobKey(elKey, jobKey, job) {
+      var keyValue =
+        job[jobKey] ?? currentConfig[jobKey] ?? defaultConfig[jobKey];
+      if (Array.isArray(keyValue)) {
+        // 判断是否是数组
+        document.getElementById(elKey).value = keyValue.join(",");
+      } else if (document.getElementById(elKey).type == "checkbox") {
+        // 判断input是否是checkbox
+        document.getElementById(elKey).checked = keyValue;
+      } else {
+        document.getElementById(elKey).value = keyValue;
       }
+    }
 
-      function loadJobInfo(jobId) {
-        saveConfigData();
-        if (jobId == null) {
-          job = currentConfig;
-        } else {
-          var job = currentConfig.job_list.find((job) => job.id == jobId);
-        }
-        if (job == null) {
-          job = currentConfig;
-        }
-        loadJobKey("job_id", "id", job);
-        loadJobKey("job_root_folder_id", "root_folder_id", job);
-        loadJobKey("job_client_id", "client_id", job);
-        loadJobKey("job_client_secret", "client_secret", job);
-        loadJobKey("job_target_dir", "target_dir", job);
-        loadJobKey("job_path_prefix", "path_prefix", job);
-        loadJobKey("job_use_302_url", "use_302_url", job);
-        loadJobKey("job_subtitle", "subtitle", job);
-        loadJobKey("job_image", "image", job);
-        loadJobKey("job_nfo", "nfo", job);
-        loadJobKey("job_overwrite", "overwrite", job);
+    function loadDefaults() {
+      var keys = [
+        "cron",
+        "client_id",
+        "client_secret",
+        "use_302_url",
+        "proxy",
+        "cache_expire_time",
+        "video_extensions",
+        "subtitle_extensions",
+        "download_image_suffix",
+        "image_extensions",
+        "subtitle",
+        "image",
+        "nfo",
+        "running_on_start",
+        "overwrite",
+        "watch_delete",
+        "clean_local",
+        "flatten_mode",
+        "path_prefix",
+      ];
+      keys.forEach((key) => {
+        loadConfigKey(key, key);
+      });
+      handleFileOptionsToggle();
+    }
+
+    function loadJobInfo(jobId) {
+      saveConfigData();
+      if (jobId == null) {
+        job = currentConfig;
+      } else {
+        var job = currentConfig.job_list.find((job) => job.id == jobId);
       }
+      if (job == null) {
+        job = currentConfig;
+      }
+      loadJobKey("job_id", "id", job);
+      loadJobKey("job_root_folder_id", "root_folder_id", job);
+      loadJobKey("job_client_id", "client_id", job);
+      loadJobKey("job_client_secret", "client_secret", job);
+      loadJobKey("job_target_dir", "target_dir", job);
+      loadJobKey("job_path_prefix", "path_prefix", job);
+      loadJobKey("job_use_302_url", "use_302_url", job);
+      loadJobKey("job_subtitle", "subtitle", job);
+      loadJobKey("job_image", "image", job);
+      loadJobKey("job_nfo", "nfo", job);
+      loadJobKey("job_overwrite", "overwrite", job);
+    }
 
-      function editJob(jobId) {
-        console.log("编辑任务:", jobId);
-        currentJobId = jobId;
-        // 实现编辑逻辑
-        loadJobInfo(jobId);
+    function editJob(jobId) {
+      console.log("编辑任务:", jobId);
+      currentJobId = jobId;
+      // 实现编辑逻辑
+      loadJobInfo(jobId);
+      const modal = document.getElementById("add-task-modal");
+      const modalContent = document.getElementById("modal-content");
+
+      modal.classList.remove("hidden");
+      setTimeout(() => {
+        modalContent.classList.remove("scale-95", "opacity-0");
+        modalContent.classList.add("scale-100", "opacity-100");
+      }, 10);
+    }
+
+    function deleteJob(jobId) {
+      if (confirm("确定要删除这个任务吗？")) {
+        console.log("删除任务:", jobId);
+        // 实现删除逻辑
+        currentConfig.job_list = currentConfig.job_list.filter(
+          (job) => job.id !== jobId
+        );
+        reloadJobTable();
+      }
+    }
+
+    function saveConfigData() {
+      currentConfig["cron"] = document.getElementById("cron").value;
+      currentConfig["client_id"] = document.getElementById("client_id").value;
+      currentConfig["client_secret"] =
+        document.getElementById("client_secret").value;
+      currentConfig["use_302_url"] =
+        document.getElementById("use_302_url").checked;
+      currentConfig["proxy"] = document.getElementById("proxy").value;
+      currentConfig["cache_expire_time"] = Number(
+        document.getElementById("cache_expire_time").value
+      );
+      currentConfig["video_extensions"] = document
+        .getElementById("video_extensions")
+        .value.split(",");
+      currentConfig["subtitle_extensions"] = document
+        .getElementById("subtitle_extensions")
+        .value.split(",");
+      currentConfig["download_image_suffix"] = document
+        .getElementById("download_image_suffix")
+        .value.split(",");
+      currentConfig["image_extensions"] = document
+        .getElementById("image_extensions")
+        .value.split(",");
+      currentConfig["subtitle"] = document.getElementById("subtitle").checked;
+      currentConfig["image"] = document.getElementById("image").checked;
+      currentConfig["nfo"] = document.getElementById("nfo").checked;
+      currentConfig["running_on_start"] =
+        document.getElementById("running_on_start").checked;
+      currentConfig["overwrite"] =
+        document.getElementById("overwrite").checked;
+      currentConfig["watch_delete"] =
+        document.getElementById("watch_delete").checked;
+      currentConfig["clean_local"] =
+        document.getElementById("clean_local").checked;
+      currentConfig["flatten_mode"] =
+        document.getElementById("flatten_mode").checked;
+    }
+
+    // 添加任务按钮
+    document
+      .getElementById("add-task-btn")
+      .addEventListener("click", function () {
         const modal = document.getElementById("add-task-modal");
         const modalContent = document.getElementById("modal-content");
-
+        loadJobInfo(null);
         modal.classList.remove("hidden");
         setTimeout(() => {
           modalContent.classList.remove("scale-95", "opacity-0");
           modalContent.classList.add("scale-100", "opacity-100");
         }, 10);
-      }
+      });
 
-      function deleteJob(jobId) {
-        if (confirm("确定要删除这个任务吗？")) {
-          console.log("删除任务:", jobId);
-          // 实现删除逻辑
-          currentConfig.job_list = currentConfig.job_list.filter(
-            (job) => job.id !== jobId
-          );
+    // 关闭模态框
+    document
+      .getElementById("close-modal")
+      .addEventListener("click", closeModal);
+    document
+      .getElementById("cancel-add-task")
+      .addEventListener("click", closeModal);
+
+    function closeModal() {
+      const modal = document.getElementById("add-task-modal");
+      const modalContent = document.getElementById("modal-content");
+
+      modalContent.classList.remove("scale-100", "opacity-100");
+      modalContent.classList.add("scale-95", "opacity-0");
+
+      setTimeout(() => {
+        modal.classList.add("hidden");
+      }, 300);
+    }
+
+    function useJobConfig(job_key, config_key) {
+      return (
+        document.getElementById(job_key).value != "" &&
+        document.getElementById(job_key).value != currentConfig[config_key]
+      );
+    }
+
+    function useJobBooleanConfig(job_key, config_key) {
+      return (
+        document.getElementById(job_key).checked != currentConfig[config_key]
+      );
+    }
+
+    function updateJobInfo(job) {
+      job["id"] = document.getElementById("job_id").value;
+      job["root_folder_id"] =
+        document.getElementById("job_root_folder_id").value;
+      job["target_dir"] = document.getElementById("job_target_dir").value;
+      job["path_prefix"] = document.getElementById("job_path_prefix").value;
+      job["client_id"] = document.getElementById("job_client_id").value;
+      job["client_secret"] =
+        document.getElementById("job_client_secret").value;
+      job["use_302_url"] = document.getElementById("job_use_302_url").checked;
+      job["subtitle"] = document.getElementById("job_subtitle").checked;
+      job["image"] = document.getElementById("job_image").checked;
+      job["nfo"] = document.getElementById("job_nfo").checked;
+      job["overwrite"] = document.getElementById("job_overwrite").checked;
+      return job;
+    }
+
+    // 确认添加任务
+    document
+      .getElementById("confirm-add-task")
+      .addEventListener("click", function () {
+        // 这里可以添加添加任务的逻辑
+        var job_id = document.getElementById("job_id").value;
+        if (job_id != "") {
+          var job = currentConfig.job_list.find((job) => job.id == job_id);
+          if (job == null) {
+            job = {
+              id: job_id,
+              root_folder_id:
+                document.getElementById("job_root_folder_id").value,
+              target_dir: document.getElementById("job_target_dir").value,
+              path_prefix: document.getElementById("job_path_prefix").value,
+              use_302_url: document.getElementById("job_use_302_url").checked,
+              subtitle: document.getElementById("job_subtitle").checked,
+              image: document.getElementById("job_image").checked,
+              nfo: document.getElementById("job_nfo").checked,
+              overwrite: document.getElementById("job_overwrite").checked,
+            };
+            job = updateJobInfo(job);
+            currentConfig.job_list.push(job);
+            if (currentJobId != "" && currentJobId != job_id) {
+              currentConfig.job_list = currentConfig.job_list.filter(
+                (job) => job.id != currentJobId
+              );
+            }
+          } else {
+            currentConfig.job_list[currentConfig.job_list.indexOf(job)] =
+              updateJobInfo(job);
+          }
           reloadJobTable();
         }
-      }
+        closeModal();
+        showToast("success", "保存成功", "任务已保存");
+      });
 
-      function saveConfigData() {
-        currentConfig["cron"] = document.getElementById("cron").value;
-        currentConfig["client_id"] = document.getElementById("client_id").value;
-        currentConfig["client_secret"] =
-          document.getElementById("client_secret").value;
-        currentConfig["use_302_url"] =
-          document.getElementById("use_302_url").checked;
-        currentConfig["proxy"] = document.getElementById("proxy").value;
-        currentConfig["cache_expire_time"] = Number(
-          document.getElementById("cache_expire_time").value
-        );
-        currentConfig["video_extensions"] = document
-          .getElementById("video_extensions")
-          .value.split(",");
-        currentConfig["subtitle_extensions"] = document
-          .getElementById("subtitle_extensions")
-          .value.split(",");
-        currentConfig["download_image_suffix"] = document
-          .getElementById("download_image_suffix")
-          .value.split(",");
-        currentConfig["image_extensions"] = document
-          .getElementById("image_extensions")
-          .value.split(",");
-        currentConfig["subtitle"] = document.getElementById("subtitle").checked;
-        currentConfig["image"] = document.getElementById("image").checked;
-        currentConfig["nfo"] = document.getElementById("nfo").checked;
-        currentConfig["running_on_start"] =
-          document.getElementById("running_on_start").checked;
-        currentConfig["overwrite"] =
-          document.getElementById("overwrite").checked;
-        currentConfig["watch_delete"] =
-          document.getElementById("watch_delete").checked;
-        currentConfig["flatten_mode"] =
-          document.getElementById("flatten_mode").checked;
-      }
-
-      // 添加任务按钮
-      document
-        .getElementById("add-task-btn")
-        .addEventListener("click", function () {
-          const modal = document.getElementById("add-task-modal");
-          const modalContent = document.getElementById("modal-content");
-          loadJobInfo(null);
-          modal.classList.remove("hidden");
-          setTimeout(() => {
-            modalContent.classList.remove("scale-95", "opacity-0");
-            modalContent.classList.add("scale-100", "opacity-100");
-          }, 10);
-        });
-
-      // 关闭模态框
-      document
-        .getElementById("close-modal")
-        .addEventListener("click", closeModal);
-      document
-        .getElementById("cancel-add-task")
-        .addEventListener("click", closeModal);
-
-      function closeModal() {
-        const modal = document.getElementById("add-task-modal");
-        const modalContent = document.getElementById("modal-content");
-
-        modalContent.classList.remove("scale-100", "opacity-100");
-        modalContent.classList.add("scale-95", "opacity-0");
-
-        setTimeout(() => {
-          modal.classList.add("hidden");
-        }, 300);
-      }
-
-      function useJobConfig(job_key, config_key) {
-        return (
-          document.getElementById(job_key).value != "" &&
-          document.getElementById(job_key).value != currentConfig[config_key]
-        );
-      }
-
-      function useJobBooleanConfig(job_key, config_key) {
-        return (
-          document.getElementById(job_key).checked != currentConfig[config_key]
-        );
-      }
-
-      function updateJobInfo(job) {
-        job["id"] = document.getElementById("job_id").value;
-        job["root_folder_id"] =
-          document.getElementById("job_root_folder_id").value;
-        job["target_dir"] = document.getElementById("job_target_dir").value;
-        job["path_prefix"] = document.getElementById("job_path_prefix").value;
-        job["client_id"] = document.getElementById("job_client_id").value;
-        job["client_secret"] =
-          document.getElementById("job_client_secret").value;
-        job["use_302_url"] = document.getElementById("job_use_302_url").checked;
-        job["subtitle"] = document.getElementById("job_subtitle").checked;
-        job["image"] = document.getElementById("job_image").checked;
-        job["nfo"] = document.getElementById("job_nfo").checked;
-        job["overwrite"] = document.getElementById("job_overwrite").checked;
-        return job;
-      }
-
-      // 确认添加任务
-      document
-        .getElementById("confirm-add-task")
-        .addEventListener("click", function () {
-          // 这里可以添加添加任务的逻辑
-          var job_id = document.getElementById("job_id").value;
-          if (job_id != "") {
-            var job = currentConfig.job_list.find((job) => job.id == job_id);
-            if (job == null) {
-              job = {
-                id: job_id,
-                root_folder_id:
-                  document.getElementById("job_root_folder_id").value,
-                target_dir: document.getElementById("job_target_dir").value,
-                path_prefix: document.getElementById("job_path_prefix").value,
-                use_302_url: document.getElementById("job_use_302_url").checked,
-                subtitle: document.getElementById("job_subtitle").checked,
-                image: document.getElementById("job_image").checked,
-                nfo: document.getElementById("job_nfo").checked,
-                overwrite: document.getElementById("job_overwrite").checked,
-              };
-              job = updateJobInfo(job);
-              currentConfig.job_list.push(job);
-              if (currentJobId != "" && currentJobId != job_id) {
-                currentConfig.job_list = currentConfig.job_list.filter(
-                  (job) => job.id != currentJobId
-                );
-              }
-            } else {
-              currentConfig.job_list[currentConfig.job_list.indexOf(job)] =
-                updateJobInfo(job);
-            }
-            reloadJobTable();
-          }
-          closeModal();
-          showToast("success", "保存成功", "任务已保存");
-        });
-
-      // 关闭提示消息
-      document
-        .getElementById("close-toast")
-        .addEventListener("click", function () {
-          const toast = document.getElementById("toast");
-          toast.classList.remove("translate-x-0");
-          toast.classList.add("translate-x-full");
-        });
-
-      // 显示提示消息
-      function showToast(type, title, message) {
+    // 关闭提示消息
+    document
+      .getElementById("close-toast")
+      .addEventListener("click", function () {
         const toast = document.getElementById("toast");
-        const toastIcon = document.getElementById("toast-icon");
-        const toastTitle = document.getElementById("toast-title");
-        const toastMessage = document.getElementById("toast-message");
+        toast.classList.remove("translate-x-0");
+        toast.classList.add("translate-x-full");
+      });
 
-        // 设置提示类型
-        if (type === "success") {
-          toastIcon.className =
-            "w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-green-100";
-          toastIcon.innerHTML =
-            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="#52C41A" d="M2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8m6-7a7 7 0 1 0 0 14A7 7 0 0 0 8 1m2.854 5.854a.5.5 0 0 0-.708-.708L7.25 9.043L5.854 7.646a.5.5 0 1 0-.708.708l1.75 1.75a.5.5 0 0 0 .708 0z" /></svg>';
-        } else if (type === "error") {
-          toastIcon.className =
-            "w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-red-100";
-          toastIcon.innerHTML = '<i class="fa fa-times text-red-500"></i>';
-        } else if (type === "warning") {
-          toastIcon.className =
-            "w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-yellow-100";
-          toastIcon.innerHTML =
-            '<i class="fa fa-exclamation text-yellow-500"></i>';
-        } else if (type === "info") {
-          toastIcon.className =
-            "w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-blue-100";
-          toastIcon.innerHTML =
-            '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#165DFF" d="M12 17.75a.75.75 0 0 0 .75-.75v-6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75M12 7a1 1 0 1 1 0 2a1 1 0 0 1 0-2"/><path fill="#165DFF" fill-rule="evenodd" d="M1.25 12C1.25 6.063 6.063 1.25 12 1.25S22.75 6.063 22.75 12S17.937 22.75 12 22.75S1.25 17.937 1.25 12M12 2.75a9.25 9.25 0 1 0 0 18.5a9.25 9.25 0 0 0 0-18.5" clip-rule="evenodd"/></svg>';
-        }
+    // 显示提示消息
+    function showToast(type, title, message) {
+      const toast = document.getElementById("toast");
+      const toastIcon = document.getElementById("toast-icon");
+      const toastTitle = document.getElementById("toast-title");
+      const toastMessage = document.getElementById("toast-message");
 
-        // 设置提示内容
-        toastTitle.textContent = title;
-        toastMessage.textContent = message;
-
-        // 显示提示
-        toast.classList.remove("translate-x-full");
-        toast.classList.add("translate-x-0");
-
-        // 3秒后自动关闭
-        setTimeout(() => {
-          toast.classList.remove("translate-x-0");
-          toast.classList.add("translate-x-full");
-        }, 3000);
+      // 设置提示类型
+      if (type === "success") {
+        toastIcon.className =
+          "w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-green-100";
+        toastIcon.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="#52C41A" d="M2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8m6-7a7 7 0 1 0 0 14A7 7 0 0 0 8 1m2.854 5.854a.5.5 0 0 0-.708-.708L7.25 9.043L5.854 7.646a.5.5 0 1 0-.708.708l1.75 1.75a.5.5 0 0 0 .708 0z" /></svg>';
+      } else if (type === "error") {
+        toastIcon.className =
+          "w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-red-100";
+        toastIcon.innerHTML = '<i class="fa fa-times text-red-500"></i>';
+      } else if (type === "warning") {
+        toastIcon.className =
+          "w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-yellow-100";
+        toastIcon.innerHTML =
+          '<i class="fa fa-exclamation text-yellow-500"></i>';
+      } else if (type === "info") {
+        toastIcon.className =
+          "w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-blue-100";
+        toastIcon.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#165DFF" d="M12 17.75a.75.75 0 0 0 .75-.75v-6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75M12 7a1 1 0 1 1 0 2a1 1 0 0 1 0-2"/><path fill="#165DFF" fill-rule="evenodd" d="M1.25 12C1.25 6.063 6.063 1.25 12 1.25S22.75 6.063 22.75 12S17.937 22.75 12 22.75S1.25 17.937 1.25 12M12 2.75a9.25 9.25 0 1 0 0 18.5a9.25 9.25 0 0 0 0-18.5" clip-rule="evenodd"/></svg>';
       }
 
+      // 设置提示内容
+      toastTitle.textContent = title;
+      toastMessage.textContent = message;
+
+      // 显示提示
+      toast.classList.remove("translate-x-full");
+      toast.classList.add("translate-x-0");
+
+      // 3秒后自动关闭
+      setTimeout(() => {
+        toast.classList.remove("translate-x-0");
+        toast.classList.add("translate-x-full");
+      }, 3000);
+    }
+
+    // 保存配置数据
+    function saveConfig() {
       // 保存配置数据
-      function saveConfig() {
-        // 保存配置数据
-        saveConfigData()
-        // 发送保存请求
-        fetch('/save_config', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(currentConfig)
+      saveConfigData()
+      // 发送保存请求
+      fetch('/save_config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(currentConfig)
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showToast('success', '保存成功', '配置已保存');
+          } else {
+            showToast('error', '保存失败', data.message || '无法保存配置');
+          }
         })
-          .then(response => response.json())
-          .then(data => {
+        .catch(error => {
+          console.error('保存配置失败:', error);
+          showToast('error', '请求失败', '无法连接到服务器');
+        });
+    }
+
+    // 标签页切换功能
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.addEventListener('click', () => {
+        // 隐藏所有内容
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.add('hidden');
+        });
+
+        // 移除所有按钮的活动状态
+        document.querySelectorAll('.tab-button').forEach(btn => {
+          btn.classList.remove('text-primary', 'bg-primary/5', 'border-primary');
+          btn.classList.add('text-gray-600', 'bg-white', 'border-transparent');
+        });
+
+        // 显示选中的内容
+        const tabId = button.getAttribute('data-tab');
+        document.getElementById(tabId).classList.remove('hidden');
+
+        // 设置按钮的活动状态
+        button.classList.remove('text-gray-600', 'bg-white', 'border-transparent');
+        button.classList.add('text-primary', 'bg-primary/5', 'border-primary');
+      });
+    });
+
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+      anchor.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        document.querySelector(this.getAttribute("href")).scrollIntoView({
+          behavior: "smooth",
+        });
+      });
+    });
+
+    // 302链接开关联动功能
+    function handle302UrlToggle() {
+      const use302Url = document.getElementById('use_302_url').checked;
+      const cacheExpireTimeContainer = document.getElementById('cache_expire_time').closest('.mb-6');
+      const proxyContainer = document.getElementById('proxy').closest('.mb-6');
+      const pathPrefixContainer = document.getElementById('path_prefix').closest('.mb-6');
+
+      if (use302Url) {
+        // 开启302链接时
+        cacheExpireTimeContainer.classList.remove('hidden');
+        proxyContainer.classList.remove('hidden');
+        pathPrefixContainer.classList.add('hidden');
+      } else {
+        // 关闭302链接时
+        cacheExpireTimeContainer.classList.add('hidden');
+        proxyContainer.classList.add('hidden');
+        pathPrefixContainer.classList.remove('hidden');
+      }
+    }
+
+    // 文件处理选项开关联动功能
+    function handleFileOptionsToggle() {
+      // 下载字幕文件开关与字幕文件后缀配置联动
+      const subtitleToggle = document.getElementById('subtitle').checked;
+      const subtitleExtensionsContainer = document.getElementById('subtitle_extensions').parentElement;
+      subtitleExtensionsContainer.classList.toggle('hidden', !subtitleToggle);
+
+      // 下载图片文件开关与图片文件后缀配置联动
+      const imageToggle = document.getElementById('image').checked;
+      const imageSettingsContainer = document.querySelector('#image').closest('.border.border-gray-200.rounded-lg.p-4').querySelector('.space-y-3');
+      imageSettingsContainer.classList.toggle('hidden', !imageToggle);
+    }
+
+    // 页面加载完成后获取配置数据
+    document.addEventListener("DOMContentLoaded", function () {
+      getConfigData();
+
+      // 初始调用一次，确保状态正确
+      handle302UrlToggle();
+      handleFileOptionsToggle();
+
+      // 添加事件监听器
+      document.getElementById('use_302_url').addEventListener('change', handle302UrlToggle);
+      document.getElementById('subtitle').addEventListener('change', handleFileOptionsToggle);
+      document.getElementById('image').addEventListener('change', handleFileOptionsToggle);
+    });
+
+    // 刮削按钮点击事件
+    document
+      .getElementById("scrape-btn")
+      .addEventListener("click", function () {
+        const folderId = document
+          .getElementById("scrape_folder_id")
+          .value.trim();
+        const depJobId = document
+          .getElementById("scrape_dep_job_id")
+          .value.trim();
+        const outputPath = document
+          .getElementById("scrape_output_path")
+          .value.trim();
+
+        // 验证输入
+        if (!folderId) {
+          showToast("error", "输入错误", "请填写目标文件夹ID");
+          return;
+        }
+        if (!depJobId) {
+          showToast("error", "输入错误", "请填写依赖任务ID");
+          return;
+        }
+        if (!outputPath) {
+          showToast("error", "输入错误", "请填写输出目录路径");
+          return;
+        }
+
+        // 准备刮削参数
+        const scrapeParams = {
+          dep_job_id: depJobId,
+          parent_id: folderId,
+          parent_path: outputPath,
+        };
+
+        // 发送刮削请求
+        fetch("/scrape_directory", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(scrapeParams),
+        })
+          .then((response) => response.json())
+          .then((data) => {
             if (data.success) {
-              showToast('success', '保存成功', '配置已保存');
+              showToast("success", "刮削任务已完成", "任务执行完成");
+              // 清空输入框
+              document.getElementById("scrape_folder_id").value = "";
             } else {
-              showToast('error', '保存失败', data.message || '无法保存配置');
+              showToast(
+                "error",
+                "启动失败",
+                data.message || "刮削任务启动失败"
+              );
             }
           })
-          .catch(error => {
-            console.error('保存配置失败:', error);
-            showToast('error', '请求失败', '无法连接到服务器');
+          .catch((error) => {
+            console.error("刮削请求失败:", error);
+            showToast("error", "请求失败", "无法连接到服务器");
           });
-      }
-
-      // 标签页切换功能
-      document.querySelectorAll('.tab-button').forEach(button => {
-        button.addEventListener('click', () => {
-          // 隐藏所有内容
-          document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.add('hidden');
-          });
-          
-          // 移除所有按钮的活动状态
-          document.querySelectorAll('.tab-button').forEach(btn => {
-            btn.classList.remove('text-primary', 'bg-primary/5', 'border-primary');
-            btn.classList.add('text-gray-600', 'bg-white', 'border-transparent');
-          });
-          
-          // 显示选中的内容
-          const tabId = button.getAttribute('data-tab');
-          document.getElementById(tabId).classList.remove('hidden');
-          
-          // 设置按钮的活动状态
-          button.classList.remove('text-gray-600', 'bg-white', 'border-transparent');
-          button.classList.add('text-primary', 'bg-primary/5', 'border-primary');
-        });
-      });
-      
-      // 平滑滚动
-      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-        anchor.addEventListener("click", function (e) {
-          e.preventDefault();
-
-          document.querySelector(this.getAttribute("href")).scrollIntoView({
-            behavior: "smooth",
-          });
-        });
       });
 
-      // 302链接开关联动功能
-      function handle302UrlToggle() {
-        const use302Url = document.getElementById('use_302_url').checked;
-        const cacheExpireTimeContainer = document.getElementById('cache_expire_time').closest('.mb-6');
-        const proxyContainer = document.getElementById('proxy').closest('.mb-6');
-        const pathPrefixContainer = document.getElementById('path_prefix').closest('.mb-6');
+    // 上传按钮点击事件
+    document
+      .getElementById("upload-btn")
+      .addEventListener("click", function () {
+        const folderPath = document
+          .getElementById("upload_folder_path")
+          .value.trim();
+        const depJobId = document
+          .getElementById("upload_dep_job_id")
+          .value.trim();
+        const panPathId = document
+          .getElementById("upload_pan_path_id")
+          .value.trim();
 
-        if (use302Url) {
-          // 开启302链接时
-          cacheExpireTimeContainer.classList.remove('hidden');
-          proxyContainer.classList.remove('hidden');
-          pathPrefixContainer.classList.add('hidden');
-        } else {
-          // 关闭302链接时
-          cacheExpireTimeContainer.classList.add('hidden');
-          proxyContainer.classList.add('hidden');
-          pathPrefixContainer.classList.remove('hidden');
+        // 验证输入
+        if (!folderPath) {
+          showToast("error", "输入错误", "请填写目标文件夹路径");
+          return;
         }
-      }
+        if (!depJobId) {
+          showToast("error", "输入错误", "请填写依赖任务ID");
+          return;
+        }
 
-      // 文件处理选项开关联动功能
-      function handleFileOptionsToggle() {
-        // 下载字幕文件开关与字幕文件后缀配置联动
-        const subtitleToggle = document.getElementById('subtitle').checked;
-        const subtitleExtensionsContainer = document.getElementById('subtitle_extensions').parentElement;
-        subtitleExtensionsContainer.classList.toggle('hidden', !subtitleToggle);
+        // 准备上传参数
+        const uploadParams = {
+          dep_job_id: depJobId,
+          folder_path: folderPath,
+          parent_id: panPathId,
+        };
 
-        // 下载图片文件开关与图片文件后缀配置联动
-        const imageToggle = document.getElementById('image').checked;
-        const imageSettingsContainer = document.querySelector('#image').closest('.border.border-gray-200.rounded-lg.p-4').querySelector('.space-y-3');
-        imageSettingsContainer.classList.toggle('hidden', !imageToggle);
-      }
-
-      // 页面加载完成后获取配置数据
-      document.addEventListener("DOMContentLoaded", function () {
-        getConfigData();
-        
-        // 初始调用一次，确保状态正确
-        handle302UrlToggle();
-        handleFileOptionsToggle();
-        
-        // 添加事件监听器
-        document.getElementById('use_302_url').addEventListener('change', handle302UrlToggle);
-        document.getElementById('subtitle').addEventListener('change', handleFileOptionsToggle);
-        document.getElementById('image').addEventListener('change', handleFileOptionsToggle);
+        // 发送上传请求
+        fetch("/upload_directory", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(uploadParams),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showToast("success", "上传任务已完成", "任务执行完成");
+              // 清空输入框
+              document.getElementById("upload_folder_id").value = "";
+            } else {
+              showToast(
+                "error",
+                "上传失败",
+                data.message || "上传任务启动失败"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("上传请求失败:", error);
+            showToast("error", "请求失败", "无法连接到服务器");
+          });
       });
+  </script>
+</body>
 
-      // 刮削按钮点击事件
-      document
-        .getElementById("scrape-btn")
-        .addEventListener("click", function () {
-          const folderId = document
-            .getElementById("scrape_folder_id")
-            .value.trim();
-          const depJobId = document
-            .getElementById("scrape_dep_job_id")
-            .value.trim();
-          const outputPath = document
-            .getElementById("scrape_output_path")
-            .value.trim();
-
-          // 验证输入
-          if (!folderId) {
-            showToast("error", "输入错误", "请填写目标文件夹ID");
-            return;
-          }
-          if (!depJobId) {
-            showToast("error", "输入错误", "请填写依赖任务ID");
-            return;
-          }
-          if (!outputPath) {
-            showToast("error", "输入错误", "请填写输出目录路径");
-            return;
-          }
-
-          // 准备刮削参数
-          const scrapeParams = {
-            dep_job_id: depJobId,
-            parent_id: folderId,
-            parent_path: outputPath,
-          };
-
-          // 发送刮削请求
-          fetch("/scrape_directory", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(scrapeParams),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.success) {
-                showToast("success", "刮削任务已完成", "任务执行完成");
-                // 清空输入框
-                document.getElementById("scrape_folder_id").value = "";
-              } else {
-                showToast(
-                  "error",
-                  "启动失败",
-                  data.message || "刮削任务启动失败"
-                );
-              }
-            })
-            .catch((error) => {
-              console.error("刮削请求失败:", error);
-              showToast("error", "请求失败", "无法连接到服务器");
-            });
-        });
-
-      // 上传按钮点击事件
-      document
-        .getElementById("upload-btn")
-        .addEventListener("click", function () {
-          const folderPath = document
-            .getElementById("upload_folder_path")
-            .value.trim();
-          const depJobId = document
-            .getElementById("upload_dep_job_id")
-            .value.trim();
-          const panPathId = document
-            .getElementById("upload_pan_path_id")
-            .value.trim();
-
-          // 验证输入
-          if (!folderPath) {
-            showToast("error", "输入错误", "请填写目标文件夹路径");
-            return;
-          }
-          if (!depJobId) {
-            showToast("error", "输入错误", "请填写依赖任务ID");
-            return;
-          }
-
-          // 准备上传参数
-          const uploadParams = {
-            dep_job_id: depJobId,
-            folder_path: folderPath,
-            parent_id: panPathId,
-          };
-
-          // 发送上传请求
-          fetch("/upload_directory", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(uploadParams),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.success) {
-                showToast("success", "上传任务已完成", "任务执行完成");
-                // 清空输入框
-                document.getElementById("upload_folder_id").value = "";
-              } else {
-                showToast(
-                  "error",
-                  "上传失败",
-                  data.message || "上传任务启动失败"
-                );
-              }
-            })
-            .catch((error) => {
-              console.error("上传请求失败:", error);
-              showToast("error", "请求失败", "无法连接到服务器");
-            });
-        });
-    </script>
-  </body>
 </html>

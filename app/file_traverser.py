@@ -54,7 +54,7 @@ class FileTraverser:
             if parent_id is None:
                 parent_id = config_manager.get("root_folder_id", job_id=self.job_id)
             logger.info(
-                f"开始遍历文件夹: {parent_path}",
+                f"遍历文件夹: {parent_path}",
             )
 
             # 兼容同账号多文件夹配置

@@ -135,6 +135,7 @@ class ConfigManager:
             "watch_delete": False,
             "client_id": "",
             "client_secret": "",
+            "clean_local": False,
             "job_list": [],
         }
 
@@ -404,7 +405,8 @@ class ConfigManager:
                 "nfo": True,
                 "overwrite": False,
                 "running_on_start": False,
-                "watch_delete": True,
+                "watch_delete": False,
+                "clean_local": False,
             }
 
             for key, default_value in boolean_configs.items():
@@ -582,6 +584,9 @@ def display_config_overview():
     )
     _get_logger().info(
         f"  • 文件删除监听: {'✅' if config_manager.get('watch_delete') else '❌'}"
+    )
+    _get_logger().info(
+        f"  • 本地文件清理: {'✅' if config_manager.get('clean_local') else '❌'}"
     )
     if config_manager.get("watch_delete"):
         # 启动文件删除监控

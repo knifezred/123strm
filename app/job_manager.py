@@ -45,12 +45,14 @@ class JobManager:
             # 2. 保存文件ID映射
             save_file_ids(file_traverser.get_cloud_files(), job_id)
             # 3. 创建文件清理器并清理本地文件
-            file_cleaner = FileCleaner(file_traverser.get_cloud_files())
-            if parent_path:
-                file_cleaner.clean_local_files(parent_path)
-            else:
-                target_dir = config_manager.get("target_dir", job_id=job_id)
-                file_cleaner.clean_local_files(target_dir)
+            clean_local = config_manager.get("clean_local", default=False)
+            if clean_local:
+                file_cleaner = FileCleaner(file_traverser.get_cloud_files())
+                if parent_path:
+                    file_cleaner.clean_local_files(parent_path)
+                else:
+                    target_dir = config_manager.get("target_dir", job_id=job_id)
+                    file_cleaner.clean_local_files(target_dir)
 
             logger.info(f"任务处理完成 job_id: {job_id}")
         except Exception as e:

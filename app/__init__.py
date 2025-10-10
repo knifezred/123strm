@@ -5,7 +5,7 @@
 """
 
 # 包版本信息
-__version__ = "2.0.0-rc1"
+__version__ = "2.0.0-rc2"
 
 logger = None
 
