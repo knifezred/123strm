@@ -6,7 +6,13 @@
 
 ## 预览
 
-![预览](./webui-preview.png)
+![预览](./static/imgs/webui-preview.png)
+
+![添加新任务](./static/imgs/webui-add-job.png)
+
+![手动刮削](./static/imgs/webui-manual-scrape.png)
+
+![上传本地目录](./static/imgs/webui-upload-local.png)
 
 ## 功能特性
 
@@ -15,9 +21,9 @@
 - 可配置海报、字幕、nfo 文件是否下载
 - 自动清理本地不存在于 123 云盘的文件
 - 支持 302 链接，观看时自动获取最新的文件链接，绿联影视中心支持外网访问
-- 1.8版本之后支持可视化配置，地址为ip:1236
-- 1.10版本后支持手动刮削指定目录，用于刮削更新或修改的文件夹
-- 1.11版本后支持上传本地目录，上传成功后会自动删除本地文件
+- 1.8 版本之后支持可视化配置，地址为 ip:1236
+- 1.10 版本后支持手动刮削指定目录，用于刮削更新或修改的文件夹
+- 1.11 版本后支持上传本地目录，上传成功后会自动删除本地文件
 
 ## 生成速度
 
@@ -71,8 +77,8 @@ services:
     restart: always
     working_dir: /app
     environment:
-      PUID: '0'
-      PGID: '0'
+      PUID: "0"
+      PGID: "0"
 ```
 
 #### config 配置
@@ -100,33 +106,33 @@ cron 配置示例。不建议配置时间间隔特别短如分钟执行，容易
 ```yml
 # 定时任务cron表达式，不配置则默认为每天凌晨1点执行
 # 为防止冲突，所有job都使用一个corn，依次生成直到全部结束
-cron: '0 02 * * *'
+cron: "0 02 * * *"
 # strm地址使用官方下载链接
 use_302_url: True
 # 不配置则默认不使用代理
-proxy: 'http://nas_ip:1236'
+proxy: "http://nas_ip:1236"
 # 302链接缓存过期时间(秒)，默认5分钟
 cache_expire_time: 300
 # strm路径前缀，可设置为cd2挂载的目录或者123盘webdav挂载的路径，需要加上对应设置的rootFolder的文件夹目录
 # 如：选择的rootFolder为 /影视剧/电视剧，cd2映射的路径为 /volume1/docker/cloud_nas/123云盘
 # 则path_prefix为 /volume1/docker/cloud_nas/123云盘/影视剧/电视剧、
 # use_302_url=True时该设置无效
-path_prefix: '/volume1/docker/cloud_nas/123云盘/影视剧/'
+path_prefix: "/volume1/docker/cloud_nas/123云盘/影视剧/"
 # 平铺模式，开启后 subtitle、image、nfo 强制关闭(可选，默认 False)
 flatten_mode: False
 # 视频文件后缀 （可选，默认 ['.mp4', '.mkv', '.ts', '.iso'] ）
 video_extensions:
-  ['.mp4', '.mkv', '.avi', '.mov', '.flv', '.wmv', '.m2ts', '.ts', '.iso']
+  [".mp4", ".mkv", ".avi", ".mov", ".flv", ".wmv", ".m2ts", ".ts", ".iso"]
 # 是否下载字幕文件（可选，默认 False）
 subtitle: True
 # 字幕文件后缀（可选，默认 ['.srt', '.ass', '.sub']）
-subtitle_extensions: ['.srt', '.ass', '.sub']
+subtitle_extensions: [".srt", ".ass", ".sub"]
 # 是否下载图片文件（可选，默认 False）
 image: True
 # 图片文件后缀 （可选，默认 [".jpg", ".jpeg", ".png", ".webp"] ）
-image_extensions: ['.jpg', '.jpeg', '.png', '.webp']
+image_extensions: [".jpg", ".jpeg", ".png", ".webp"]
 # 下载图片名后缀 （可选，默认下载全部 [] ）
-download_image_suffix: ['poster', 'fanart']
+download_image_suffix: ["poster", "fanart"]
 # 是否下载 .nfo 文件（可选，默认 False）
 nfo: True
 # 覆盖模式，本地路径存在同名文件时是否重新生成/下载该文件，仅支持strm文件（可选，默认 False）
@@ -136,24 +142,24 @@ min_file_size: 104857600
 # 程序启动后立即执行任务
 running_on_start: True
 # https://www.123pan.com/developer 注册获取
-client_id: '123123'
-client_secret: '123123'
+client_id: "123123"
+client_secret: "123123"
 # 输出路径
-target_dir: '/media/'
+target_dir: "/media/"
 # 以上所有设置均可在job_list中单独设置，优先使用job_list中的配置，没有的再使用默认值
 # target_dir 为最终输出路径，job_list 中可以配置多个账号，每个账号可以配置多个文件夹，该配置必须为每个Job配置独立的文件夹，不能嵌套，不能相互包含，否则生成后会清空非Job配置获取的文件
 job_list:
-  - id: '账号1'
+  - id: "账号1"
     # 123盘文件夹的ID
     # 浏览器打开对应文件夹,如：https://www.123pan.com/?homeFilePath=111111,222222
     # homeFilePath后的最后一串数字就是该文件夹的ID
-    root_folder_id: '0'
+    root_folder_id: "0"
     # 输出路径
-    target_dir: '/media/账号1'
-  - id: '账号2'
+    target_dir: "/media/账号1"
+  - id: "账号2"
     # 文件夹1 文件夹2 文件夹3
-    root_folder_id: '12312301,12312302,12312303'
-    client_id: '234'
-    client_secret: '234'
-    target_dir: '/media/账号2'
+    root_folder_id: "12312301,12312302,12312303"
+    client_id: "234"
+    client_secret: "234"
+    target_dir: "/media/账号2"
 ```
