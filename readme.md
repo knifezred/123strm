@@ -37,6 +37,27 @@
 
 ## 安装指南
 
+### compose 部署
+
+> ARM 架构请使用 `knifez/123strm:arm64` 镜像
+
+```yml
+services:
+  123strm:
+    image: knifez/123strm:latest
+    container_name: 123strm
+    network_mode: host
+    volumes:
+      - /volume1/docker/123strm/config:/app/config
+      - /volume1/docker/123strm/media:/media
+    restart: always
+    working_dir: /app
+    environment:
+      PUID: "0"
+      PGID: "0"
+```
+### 源码运行
+
 ```bash
 # 1. 克隆仓库
 git clone <仓库地址>
@@ -61,24 +82,3 @@ docker save -o 123strm.tar 123strm
 gzip 123strm.tar
 ```
 
-### 使用教程
-
-#### compose 部署
-
-> ARM 架构请使用 `knifez/123strm:arm64` 镜像
-
-```yml
-services:
-  123strm:
-    image: knifez/123strm:latest
-    container_name: 123strm
-    network_mode: host
-    volumes:
-      - /volume1/docker/123strm/config:/app/config
-      - /volume1/docker/123strm/media:/media
-    restart: always
-    working_dir: /app
-    environment:
-      PUID: "0"
-      PGID: "0"
-```
