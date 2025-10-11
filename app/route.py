@@ -278,10 +278,10 @@ async def upload_directory(query: dict):
                 logger.warning(f"删除文件夹失败: {dir_path}, 错误: {str(e)}")
     if query.get("generate_strm", False):
         # 生成STRM文件
-        job_manager.run_job(
+        await job_manager.run_job(
             job_id=query["dep_job_id"],
             folder_id=query["parent_id"],
-            folder_path=query["parent_path"],
+            parent_path=query["parent_path"],
         )
     # 返回详细的结果信息
     return {

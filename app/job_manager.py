@@ -3,6 +3,7 @@ import time
 import schedule
 from datetime import datetime
 import pytz
+import asyncio
 
 from . import logger
 from .config_manager import config_manager
@@ -21,7 +22,7 @@ class JobManager:
         # 存储当前正在运行的任务
         self.running_jobs = set()
 
-    def run_job(self, job_id: str, folder_id: str = None, parent_path: str = ""):
+    async def run_job(self, job_id: str, folder_id: str = None, parent_path: str = ""):
         """
         运行指定任务ID的完整处理流程
 
@@ -37,30 +38,36 @@ class JobManager:
             self.running_jobs.add(job_id)
             logger.info(f"开始处理任务: {job_id}")
 
-            # 1. 创建文件遍历器并遍历文件夹收集信息
-            file_traverser = FileTraverser(job_id)
-            file_traverser.traverse_folders(
-                parent_id=folder_id, parent_path=parent_path
-            )
-            # 2. 保存文件ID映射
-            save_file_ids(file_traverser.get_cloud_files(), job_id)
-            # 3. 创建文件清理器并清理本地文件
-            clean_local = config_manager.get("clean_local", default=False)
-            if clean_local:
-                file_cleaner = FileCleaner(file_traverser.get_cloud_files())
-                if parent_path:
-                    file_cleaner.clean_local_files(parent_path)
-                else:
-                    target_dir = config_manager.get("target_dir", job_id=job_id)
-                    file_cleaner.clean_local_files(target_dir)
-
+            # 使用to_thread在线程中执行同步操作，避免阻塞事件循环
+            await asyncio.to_thread(self._run_job_sync, job_id, folder_id, parent_path)
             logger.info(f"任务处理完成 job_id: {job_id}")
         except Exception as e:
             handle_exception(e, "job", {"job_id": job_id})
         finally:
             self.running_jobs.remove(job_id)
+            
+    def _run_job_sync(self, job_id: str, folder_id: str = None, parent_path: str = ""):
+        """
+        同步执行任务的实际逻辑，在单独线程中运行
+        """
+        # 1. 创建文件遍历器并遍历文件夹收集信息
+        file_traverser = FileTraverser(job_id)
+        file_traverser.traverse_folders(
+            parent_id=folder_id, parent_path=parent_path
+        )
+        # 2. 保存文件ID映射
+        save_file_ids(file_traverser.get_cloud_files(), job_id)
+        # 3. 创建文件清理器并清理本地文件
+        clean_local = config_manager.get("clean_local", default=False)
+        if clean_local:
+            file_cleaner = FileCleaner(file_traverser.get_cloud_files())
+            if parent_path:
+                file_cleaner.clean_local_files(parent_path)
+            else:
+                target_dir = config_manager.get("target_dir", job_id=job_id)
+                file_cleaner.clean_local_files(target_dir)
 
-    def run_all_jobs(self):
+    async def run_all_jobs(self):
         """
         运行所有配置的任务
         """
@@ -79,9 +86,9 @@ class JobManager:
 
             # 遍历执行每个任务
             for job_id in job_ids:
-                self.run_job(job_id)
+                await self.run_job(job_id)
                 # 添加短暂延迟，避免API请求过于频繁
-                time.sleep(1)
+                await asyncio.sleep(1)
 
             logger.info(f"所有定时任务执行完成")
         except Exception as e:

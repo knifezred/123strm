@@ -4,6 +4,7 @@ from croniter import croniter
 from datetime import datetime
 import asyncio
 import uvicorn
+import functools
 
 from . import __version__
 from .error_handler import handle_exception
@@ -12,6 +13,36 @@ from .config_manager import display_config_overview, config_manager
 from .job_manager import job_manager
 from .route import local302Api
 from . import logger
+
+
+# 获取当前事件循环
+def get_event_loop():
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError:
+        # 如果没有当前事件循环，创建一个新的
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
+
+
+# 创建一个包装器，用于在schedule中运行异步函数
+def async_wrapper_for_schedule(async_func):
+    @functools.wraps(async_func)
+    def wrapper(*args, **kwargs):
+        # 获取事件循环并运行异步函数
+        loop = get_event_loop()
+        if loop.is_running():
+            # 如果事件循环正在运行，使用create_task
+            loop.create_task(async_func(*args, **kwargs))
+        else:
+            # 如果事件循环没有运行，直接运行异步函数
+            loop.run_until_complete(async_func(*args, **kwargs))
+    return wrapper
+
+
+# 创建run_all_jobs的同步包装器
+run_all_jobs_sync_wrapper = async_wrapper_for_schedule(job_manager.run_all_jobs)
 
 
 def clean_expired_cache():
@@ -30,7 +61,7 @@ async def run_scheduler():
     """
     # 开启即运行
     if config_manager.get("running_on_start", default=False):
-        job_manager.run_all_jobs()
+        await job_manager.run_all_jobs()
     try:
         logger.info("启动任务调度器")
         schedule_job()
@@ -58,16 +89,16 @@ def schedule_job():
         if "*/" in parts[0]:  # 每N分钟执行
             minutes = int(parts[0].split("/")[1])
             logger.info(f"每{minutes}分钟执行一次")
-            schedule.every(minutes).minutes.do(job_manager.run_all_jobs)
+            schedule.every(minutes).minutes.do(run_all_jobs_sync_wrapper)
         elif "*/" in parts[1]:  # 每N小时执行
             hours = int(parts[1].split("/")[1])
             logger.info(f"每{hours}小时执行一次")
-            schedule.every(hours).hours.do(job_manager.run_all_jobs)
+            schedule.every(hours).hours.do(run_all_jobs_sync_wrapper)
         elif "*/" in parts[2]:  # 每N天执行
             days = int(parts[2].split("/")[1])
             logger.info(f"每{days}天执行一次")
             schedule.every(days).days.at(next_time.strftime("%H:%M:%S")).do(
-                job_manager.run_all_jobs
+                run_all_jobs_sync_wrapper
             )
         elif parts[2] != "*":  # 按月执行
             day_of_month = int(parts[2])
@@ -77,7 +108,7 @@ def schedule_job():
             days_until = 30 if days_until == 0 else days_until
             # 如果是当天，则推迟一个月
             schedule.every(days_until).days.at(next_time.strftime("%H:%M:%S")).do(
-                job_manager.run_all_jobs
+                run_all_jobs_sync_wrapper
             )
         elif parts[4] != "*":  # 按周执行
             weekday = int(parts[4])
@@ -86,12 +117,12 @@ def schedule_job():
             days_until = (weekday - datetime.now().weekday()) % 7
             days_until = 7 if days_until == 0 else days_until  # 如果是当天，则推迟一周
             schedule.every(days_until).days.at(next_time.strftime("%H:%M:%S")).do(
-                job_manager.run_all_jobs
+                run_all_jobs_sync_wrapper
             )
         else:  # 按具体时间执行
             logger.info(f"每天{next_time.strftime('%H:%M')}执行一次")
             schedule.every().day.at(next_time.strftime("%H:%M:%S")).do(
-                job_manager.run_all_jobs
+                run_all_jobs_sync_wrapper
             )
 
     logger.info(f"下次执行时间: {next_time.strftime('%Y-%m-%d %H:%M:%S')}")
