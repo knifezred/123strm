@@ -581,12 +581,6 @@ def display_config_overview():
     _get_logger().info(
         f"  • 文件删除监听: {'✅' if config_manager.get('watch_delete') else '❌'}"
     )
-    if config_manager.get("watch_delete"):
-        # 启动文件删除监控
-        from app.file_monitor import FileMonitor
-
-        monitor = FileMonitor()
-        monitor.start_monitoring("/media/")
     _get_logger().info(
         f"  • 覆盖模式: {'✅' if config_manager.get('overwrite') else '❌'}"
     )

@@ -23,6 +23,12 @@ async def run_scheduler():
     if config_manager.get("running_on_start", default=False):
         await job_manager.run_all_jobs()
 
+    if config_manager.get("watch_delete"):
+        # 启动文件删除监控
+        from .file_manager import file_manager
+
+        file_manager.start_monitoring("/media/")
+
     try:
         logger.info("启动任务调度器")
         await schedule_job()

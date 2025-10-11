@@ -7,8 +7,8 @@ import asyncio
 from . import logger
 from .config_manager import config_manager
 from .utils import save_file_ids
-from .file_traverser import FileTraverser
-from .file_cleaner import FileCleaner
+from .strm_generator import StrmGenerator
+from .file_manager import file_manager
 
 
 class JobManager:
@@ -36,22 +36,22 @@ class JobManager:
             self.running_jobs.add(job_id)
             logger.info(f"开始处理任务: {job_id}")
 
-            # 1. 创建文件遍历器并遍历文件夹收集信息 - 异步实现
-            file_traverser = FileTraverser(job_id)
-            await file_traverser.traverse_folders(parent_id=folder_id, parent_path=parent_path)
-            
-            # 2. 保存文件ID映射 - 这是一个IO操作，我们应该异步执行
-            await asyncio.to_thread(save_file_ids, file_traverser.get_cloud_files(), job_id)
-            
-            # 3. 创建文件清理器并清理本地文件 - 异步实现
-            clean_local = config_manager.get("clean_local", default=False)
-            if clean_local:
-                file_cleaner = FileCleaner(file_traverser.get_cloud_files())
-                if parent_path:
-                    await file_cleaner.clean_local_files(parent_path)
-                else:
-                    target_dir = config_manager.get("target_dir", job_id=job_id)
-                    await file_cleaner.clean_local_files(target_dir)
+            # 1. 创建strm文件生成器并遍历文件夹收集信息
+            strm_generator = StrmGenerator(job_id)
+            await strm_generator.traverse_folders(
+                parent_id=folder_id, parent_path=parent_path
+            )
+
+            # 2. 保存文件ID映射
+            cloud_files = strm_generator.get_cloud_files()
+            await asyncio.to_thread(save_file_ids, cloud_files, job_id)
+
+            # 3. 如果需要，清理本地文件
+            if config_manager.get("clean_local", default=False):
+                target_dir = parent_path or config_manager.get(
+                    "target_dir", job_id=job_id
+                )
+                await file_manager.clean_local_files(target_dir, cloud_files)
 
             logger.info(f"任务处理完成 job_id: {job_id}")
         except Exception as e:
@@ -64,24 +64,19 @@ class JobManager:
         运行所有配置的任务
         """
         try:
-            # 确保使用正确时区
             now = datetime.now(pytz.timezone("Asia/Shanghai"))
             logger.info(f"任务执行时间: {now.strftime('%Y-%m-%d %H:%M:%S')}")
-
             logger.info(f"开始执行定时任务")
 
-            # 获取所有任务ID
+            # 获取并执行所有任务
             job_ids = config_manager.get_job_ids()
-
             if not job_ids:
                 logger.warning("没有配置任何任务")
                 return
 
-            # 遍历执行每个任务
             for job_id in job_ids:
                 await self.run_job(job_id)
-                # 添加短暂延迟，避免API请求过于频繁
-                await asyncio.sleep(1)
+                await asyncio.sleep(1)  # 避免API请求过于频繁
 
             logger.info(f"所有定时任务执行完成")
         except Exception as e:
