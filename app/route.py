@@ -11,7 +11,7 @@ from fastapi.responses import RedirectResponse, FileResponse
 from .cloud_api import (
     complete_multipart_upload,
     download_url_cache,
-    get_file_download_info,
+    get_file_download_url,
     upload_file_v2_create,
 )
 from .config_manager import config_manager
@@ -94,13 +94,14 @@ async def get_file_url(file_id: int, job_id: str):
     # 检查缓存
     cache_item = download_url_cache.get(file_id)
     if cache_item is not None:
-        logger.info(f"从缓存获取302跳转URL: {cache_item['url']}")
+        logger.info(f"缓存命中: {cache_item['url']}")
         return RedirectResponse(cache_item["url"], 302)
 
     # 获取下载URL并存入缓存
     try:
         job_id = urllib.parse.unquote(job_id)
-        download_url = get_file_download_info(file_id, job_id)
+        # 异步调用get_file_download_url
+        download_url = await get_file_download_url(file_id, job_id)
         if not download_url:
             logger.info(f"未找到文件: {file_id}")
 
@@ -110,11 +111,12 @@ async def get_file_url(file_id: int, job_id: str):
             "expire_time": time.time()
             + config_manager.get("cache_expire_time", job_id),
         }
-        logger.info(f"302跳转成功: {download_url}")
+
+        logger.info(f"获取播放链接成功: {download_url}")
 
         return RedirectResponse(download_url, 302)
     except Exception as e:
-        logger.info(f"获取文件下载链接失败: {str(e)}")
+        logger.info(f"获取播放链接失败: {str(e)}")
 
     logger.info(f"未找到文件: {file_id}")
 
@@ -128,10 +130,8 @@ async def scrape_directory(query: dict):
     :param parent_path: 目标文件夹路径
     :return: 文件ID列表
     """
-    # 使用asyncio.to_thread在单独的线程中运行同步函数，避免阻塞事件循环
-    # todo: 手动选择文件夹
-    result = await asyncio.to_thread(
-        job_manager.run_job,
+    # 直接异步调用，因为job_manager.run_job已经改为异步实现
+    result = await job_manager.run_job(
         query["dep_job_id"],
         query["parent_id"],
         query["parent_path"],
@@ -191,7 +191,8 @@ async def upload_directory(query: dict):
 
                 # 计算文件ETAG（这对大文件可能很慢）
                 logger.info(f"正在计算文件MD5: {file_path}")
-                file_etag = calculate_file_md5(file_path)
+                # 使用asyncio.to_thread避免阻塞事件循环
+                file_etag = await asyncio.to_thread(calculate_file_md5, file_path)
 
                 # 构建相对路径作为文件名
                 file_name = file_path.replace(
@@ -202,7 +203,8 @@ async def upload_directory(query: dict):
 
                 # 创建上传信息
                 logger.info(f"准备上传文件: {file_path} 到 {query['parent_id']}")
-                upload_info = upload_file_v2_create(
+                # 异步调用upload_file_v2_create
+                upload_info = await upload_file_v2_create(
                     query["parent_id"],
                     file_name,
                     file_etag,
@@ -235,7 +237,8 @@ async def upload_directory(query: dict):
                     if upload_id:
                         logger.info(f"秒传失败，开始分片上传: {file_path}")
                         # 执行分片上传
-                        slice_result = complete_multipart_upload(
+                        # 异步调用complete_multipart_upload
+                        slice_result = await complete_multipart_upload(
                             file_path=file_path,
                             file_name=file_name,
                             upload_info=upload_info["data"],
@@ -297,7 +300,7 @@ async def upload_directory(query: dict):
 
 
 @local302Api.get("/get_job_folders/{job_id}/{folder_id}")
-def get_job_folders(job_id: str, folder_id: str = None):
+async def get_job_folders(job_id: str, folder_id: str = None):
     """
     递归遍历文件夹
 
@@ -326,12 +329,14 @@ def get_job_folders(job_id: str, folder_id: str = None):
             )
 
     if folder_id:
-        file_list = cloud_api.get_file_list(
+        # 异步调用get_file_list
+        file_list = await cloud_api.get_file_list(
             job_id, parent_file_id=folder_id, lastFileId=None
         )
     else:
         root_folder_ids = root_folder_id.split(",")
-        file_list = cloud_api.get_file_infos(job_id, file_ids=root_folder_ids)
+        # 异步调用get_file_infos
+        file_list = await cloud_api.get_file_infos(job_id, file_ids=root_folder_ids)
 
     if not (
         not file_list or "data" not in file_list or "fileList" not in file_list["data"]
@@ -341,9 +346,6 @@ def get_job_folders(job_id: str, folder_id: str = None):
             item_type = item.get("type")
             is_trashed = item.get("trashed", 0) == 1
             item_id = item.get("fileId")
-            logger.info(
-                f"item_id: {item_id}, item_type: {item_type}, is_trashed: {is_trashed}"
-            )
             # 处理根文件夹的情况
             if folder_id is None:
                 item["parentFileId"] = "root"

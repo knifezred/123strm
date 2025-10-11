@@ -130,7 +130,6 @@ class ConfigManager:
             "download_image_suffix": [],
             "nfo": False,
             "overwrite": False,
-            "min_file_size": 10485760,
             "running_on_start": False,
             "watch_delete": False,
             "client_id": "",
@@ -193,7 +192,6 @@ class ConfigManager:
                 "download_image_suffix": [],
                 "nfo": False,
                 "overwrite": False,
-                "min_file_size": 10485760,
                 "running_on_start": False,
                 "watch_delete": False,
                 "client_id": "",
@@ -381,10 +379,7 @@ class ConfigManager:
                     self._config[key] = default_value
 
             # 确保数值类型配置项有合理的值
-            numeric_configs = {
-                "cache_expire_time": 900,
-                "min_file_size": 10485760,  # 10MB
-            }
+            numeric_configs = {"cache_expire_time": 900}
 
             for key, default_value in numeric_configs.items():
                 if key not in self._config:
@@ -577,16 +572,14 @@ def display_config_overview():
         return False
 
     # 获取全局配置
-    _get_logger().info(f"  • 缓存过期时间: {config_manager.get('cache_expire_time')}秒")
-    _get_logger().info(f"  • 定时任务表达式: {config_manager.get('cron')}")
     _get_logger().info(
-        f"  • 启动后立即生成: {'✅' if config_manager.get('running_on_start') else '❌'}"
-    )
-    _get_logger().info(
-        f"  • 文件删除监听: {'✅' if config_manager.get('watch_delete') else '❌'}"
+        f"  • 启动后立即执行: {'✅' if config_manager.get('running_on_start') else '❌'}"
     )
     _get_logger().info(
         f"  • 本地文件清理: {'✅' if config_manager.get('clean_local') else '❌'}"
+    )
+    _get_logger().info(
+        f"  • 文件删除监听: {'✅' if config_manager.get('watch_delete') else '❌'}"
     )
     if config_manager.get("watch_delete"):
         # 启动文件删除监控
@@ -595,17 +588,16 @@ def display_config_overview():
         monitor = FileMonitor()
         monitor.start_monitoring("/media/")
     _get_logger().info(
-        f"  • 302转发: {'✅' if config_manager.get('use_302_url') else '❌'}"
-    )
-    _get_logger().info(
         f"  • 覆盖模式: {'✅' if config_manager.get('overwrite') else '❌'}"
     )
-    _get_logger().info(f"  • 代理设置: {config_manager.get('proxy')}")
-    from app.utils import convert_byte_size
-
     _get_logger().info(
-        f"  • 最小文件大小: {convert_byte_size(config_manager.get('min_file_size'))}MB"
+        f"  • 302转发: {'✅' if config_manager.get('use_302_url') else '❌'}"
     )
+    _get_logger().info(f"  • 缓存时间: {config_manager.get('cache_expire_time')} 秒")
+    _get_logger().info(f"  • 代理设置: {config_manager.get('proxy')}")
+
+    _get_logger().info(f"  • 定时设置: {config_manager.get('cron')}")
+
     _get_logger().info(
         f"  • 视频扩展名: {', '.join(config_manager.get('video_extensions', default=[]))}"
     )

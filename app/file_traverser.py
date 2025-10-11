@@ -4,8 +4,6 @@ from typing import Dict, Set
 
 from .file_processor import FileProcessor
 
-
-from .error_handler import handle_exception
 from .cloud_api import get_file_info, get_file_list
 from .config_manager import config_manager
 
@@ -19,7 +17,7 @@ class FileTraverser:
 
     def __init__(self, job_id: str):
         self.job_id = job_id
-        self.cloud_files: Dict[str, str] = {}
+        self.cloud_files: Dict[str, str] = {}  # 键为文件路径，值为文件ID
         self.target_dir = config_manager.get("target_dir", job_id=job_id)
 
         self.file_processor = FileProcessor(self.job_id)
@@ -36,13 +34,13 @@ class FileTraverser:
             default=[".jpg", ".jpeg", ".png", ".webp"],
         )
         self.subtitle_extensions = config_manager.get(
-            "subtitle_extensions", job_id=job_id, default=[".srt", ".ass", ".sub"]
+            "subtitle_extensions", job_id=job_id, default=[".srt", ".ass", ".sub"],
         )
         self.download_image_suffix = config_manager.get(
-            "download_image_suffix", job_id=job_id, default=[]
+            "download_image_suffix", job_id=job_id, default=[],
         )
 
-    def traverse_folders(self, parent_id=None, parent_path=""):
+    async def traverse_folders(self, parent_id=None, parent_path=""):
         """
         递归遍历文件夹，处理所有分页数据
 
@@ -53,25 +51,23 @@ class FileTraverser:
         try:
             if parent_id is None:
                 parent_id = config_manager.get("root_folder_id", job_id=self.job_id)
-            logger.info(
-                f"遍历文件夹: {parent_path}",
-            )
+            logger.info(f"遍历文件夹: {parent_path}")
 
             # 兼容同账号多文件夹配置
             if isinstance(parent_id, str) and "," in parent_id:
                 parent_id_list = parent_id.split(",")
                 for pid in parent_id_list:
-                    self.traverse_folders(pid, parent_path)
+                    await self.traverse_folders(pid, parent_path)
                 return
             if parent_path == "":
-                folder_info = get_file_info(parent_id, self.job_id)
+                folder_info = await get_file_info(parent_id, self.job_id)
                 folder_path = folder_info.get("filename", "") if folder_info else ""
                 parent_path = os.path.join(parent_path, folder_path)
 
             # 处理当前页和所有分页数据
             last_file_id = None
             while True:
-                file_list = get_file_list(
+                file_list = await get_file_list(
                     self.job_id,
                     parent_file_id=parent_id,
                     limit=100,
@@ -81,24 +77,16 @@ class FileTraverser:
                 if not file_list or "data" not in file_list:
                     break
 
-                self._process_file_list(file_list, parent_path)
+                await self._process_file_list(file_list, parent_path)
 
                 if file_list["data"].get("lastFileId") == -1:
                     break
                 last_file_id = file_list["data"]["lastFileId"]
 
         except Exception as e:
-            handle_exception(
-                e,
-                "traverse",
-                {
-                    "job_id": self.job_id,
-                    "folder_id": parent_id,
-                    "folder_path": parent_path,
-                },
-            )
+            logger.error(f"遍历文件夹失败: {parent_path}, 错误信息: {str(e)}")
 
-    def _process_file_list(self, file_list: dict, parent_path: str):
+    async def _process_file_list(self, file_list: dict, parent_path: str):
         """
         处理文件列表中的每个项目
 
@@ -124,11 +112,12 @@ class FileTraverser:
                 process_path = os.path.join(self.target_dir, parent_path, filename)
             if item_type == 1:  # 文件夹
                 self.cloud_files[process_path] = item["fileId"]
-                self.traverse_folders(item["fileId"], process_path)
+                await self.traverse_folders(item["fileId"], process_path)
             elif item_type == 0:  # 文件
                 # 处理文件
                 process_path = process_path.replace(filename, "")
-                file_path = self.file_processor.process_file(item, process_path)
+                # 由于process_file已改为异步方法，需要使用await
+                file_path = await self.file_processor.process_file(item, process_path)
                 self.cloud_files[file_path] = item["fileId"]
 
     def get_cloud_files(self) -> Dict[str, str]:

@@ -1,17 +1,14 @@
 """
 API连接管理模块
-包含HTTPS连接池实现
+使用aiohttp进行异步API调用
 """
 
-import http.client
 import json
 import os
 import time
-import threading
-import requests
+import asyncio
+import aiohttp
 from datetime import datetime, timedelta
-from .exceptions import ApiError
-
 
 from .config_manager import config_manager
 from .utils import (
@@ -22,68 +19,42 @@ from .utils import (
 from app import logger
 
 
-class ConnectionPool:
+# 创建全局aiohttp会话管理器
+class AsyncSessionManager:
     """
-    HTTPS连接池管理类
-    属性:
-        host: API主机地址
-        max_size: 最大连接数
-        idle_timeout: 空闲超时时间(秒)
+    异步请求会话管理器
+    使用aiohttp的ClientSession管理HTTP连接
     """
-
-    def __init__(self, host: str, max_size: int = 4, idle_timeout: int = 60):
+    def __init__(self):
+        self._lock = asyncio.Lock()
+        self._sessions = {}
+        
+    async def get_session(self, host=None):
         """
-        初始化连接池
-        :param host: API主机地址
-        :param max_size: 最大连接数
-        :param idle_timeout: 空闲超时时间(秒)
+        获取或创建一个异步会话
+        :param host: 主机地址，默认为123云盘API
+        :return: aiohttp.ClientSession对象
         """
-        self.host = host
-        self.max_size = max_size
-        self.idle_timeout = idle_timeout
-        self._pool = []
-        self._lock = threading.Lock()
+        if host is None:
+            host = "https://open-api.123pan.com"
+            
+        async with self._lock:
+            if host not in self._sessions:
+                session = aiohttp.ClientSession()
+                # 配置会话参数
+                # aiohttp的超时设置在请求时单独设置
+                self._sessions[host] = session
+            return self._sessions[host]
+    
+    async def close_all(self):
+        """关闭所有会话"""
+        async with self._lock:
+            for session in self._sessions.values():
+                await session.close()
+            self._sessions.clear()
 
-    def get_connection(self) -> http.client.HTTPSConnection:
-        """
-        从池中获取可用连接
-        返回: 只返回HTTPSConnection对象，不返回元组
-        """
-        with self._lock:
-            self._clean_expired_connections()
-
-            if self._pool:
-                conn, _ = self._pool.pop()  # 只返回连接对象
-                return conn
-
-            if len(self._pool) < self.max_size:
-                return http.client.HTTPSConnection(self.host)
-
-            raise RuntimeError("连接池已满")
-
-    def release_connection(self, conn: http.client.HTTPSConnection) -> None:
-        """
-        释放连接回池
-        :param conn: 要释放的连接
-        """
-        with self._lock:
-            if len(self._pool) < self.max_size:
-                self._pool.append((conn, time.time()))
-            else:
-                conn.close()
-
-    def _clean_expired_connections(self) -> None:
-        """清理过期连接"""
-        current_time = time.time()
-        self._pool = [
-            (conn, ts)
-            for conn, ts in self._pool
-            if current_time - ts < self.idle_timeout
-        ]
-
-
-# 全局连接池实例
-api_pool = ConnectionPool("open-api.123pan.com")
+# 全局会话管理器实例
+session_manager = AsyncSessionManager()
 
 # 每个job_id对应的缓存token设置
 global_job_cache_tokens = {}
@@ -94,89 +65,100 @@ default_use_cache_token = True
 # 配置文件夹
 config_folder = config_manager.get_config_folder()
 
-
 # 文件下载URL缓存 (存储格式: {file_id: {'url': url, 'expire_time': timestamp}})
 download_url_cache = {}
 
-
-def clean_download_url_cache():
+async def clean_download_url_cache():
     """清理过期302链接缓存项"""
     for file_id, item in list(download_url_cache.items()):
         if time.time() > item["expire_time"]:
             del download_url_cache[file_id]
 
-
-def http_123_request(job_id, payload="", path="", method="GET"):
+async def http_123_request(job_id, payload="", path="", method="GET"):
     """
-    123云盘API请求封装
+    123云盘API请求封装 - 使用aiohttp实现异步调用
     :param job_id: 任务ID
     :param payload: 请求体数据
     :param path: 请求路径
     :param method: HTTP方法
     :return: 响应数据
     """
-    conn = None
     try:
-        access_token = get_access_token(job_id)
+        access_token = await get_access_token(job_id)
         headers = {
             "Content-Type": "application/json",
             "Platform": "open_platform",
             "Authorization": f"Bearer {access_token}",
         }
-        conn = api_pool.get_connection()
-        if not isinstance(conn, http.client.HTTPConnection):
-            raise ValueError("Invalid connection type returned from pool")
-
-        conn.request(
-            method,
-            path,
-            payload,
-            headers,
-        )
-        res = conn.getresponse()
-        data = res.read()
-        response = json.loads(data.decode("utf-8"))
-        if response["code"] != 0:
-            if response["code"] == 401:
+        
+        # 构建完整URL
+        url = f"https://open-api.123pan.com{path}"
+        
+        # 获取会话并发送请求
+        session = await session_manager.get_session()
+        
+        # 根据方法类型发送请求
+        if method == "GET":
+            params = json.loads(payload) if payload else None
+            async with session.get(url, headers=headers, params=params, timeout=30) as response:
+                response.raise_for_status()
+                result = await response.json()
+        elif method == "POST":
+            async with session.post(url, headers=headers, data=payload, timeout=30) as response:
+                response.raise_for_status()
+                result = await response.json()
+        else:
+            # 支持其他方法
+            async with session.request(method, url, headers=headers, data=payload, timeout=30) as response:
+                response.raise_for_status()
+                result = await response.json()
+        
+        # 检查响应状态
+        if result["code"] != 0:
+            if result["code"] == 401:
                 global_job_cache_tokens[job_id] = False
             else:
                 # 操作频繁，暂停30秒
-                time.sleep(30)
-            error_msg = f"API请求失败(job_id={job_id}): {response['message']}"
+                await asyncio.sleep(30)
+            error_msg = f"API请求失败(job_id={job_id}): {result['message']}"
             logger.error(
-                error_msg, {"job_id": job_id, "response_code": response["code"]}
+                error_msg, {"job_id": job_id, "response_code": result["code"]}
             )
             raise ApiError(
-                error_msg, error_code=response["code"], details={"job_id": job_id}
+                error_msg, error_code=result["code"], details={"job_id": job_id}
             )
-        return response
-    finally:
-        if conn is not None:
-            api_pool.release_connection(conn)
+        return result
+    except aiohttp.ClientError as e:
+        error_msg = f"HTTP请求异常(job_id={job_id}): {str(e)}"
+        logger.error(error_msg, {"job_id": job_id})
+        raise ApiError(error_msg, details={"job_id": job_id})
+    except json.JSONDecodeError as e:
+        error_msg = f"响应解析失败(job_id={job_id}): {str(e)}"
+        logger.error(error_msg, {"job_id": job_id})
+        raise ApiError(error_msg, details={"job_id": job_id})
 
-
-def auth_access_token(client_id, client_secret):
+async def auth_access_token(client_id, client_secret):
     """
-    获取123云盘API访问令牌
+    获取123云盘API访问令牌 - 使用aiohttp实现异步调用
     :param client_id: 123云盘应用ID
     :param client_secret: 123云盘应用密钥
     :return: 访问令牌字典
     """
-    conn = None
     try:
-        conn = api_pool.get_connection()
+        url = "https://open-api.123pan.com/api/v1/access_token"
         payload = json.dumps({"client_id": client_id, "client_secret": client_secret})
         headers = {"Platform": "open_platform", "Content-Type": "application/json"}
-        conn.request("POST", "/api/v1/access_token", payload, headers)
-        res = conn.getresponse()
-        data = res.read()
-        return json.loads(data.decode("utf-8"))
-    finally:
-        if conn is not None:
-            api_pool.release_connection(conn)
+        
+        session = await session_manager.get_session()
+        async with session.post(url, data=payload, headers=headers, timeout=30) as response:
+            response.raise_for_status()
+            return await response.json()
+    except aiohttp.ClientError as e:
+        error_msg = f"获取访问令牌失败: {str(e)}"
+        logger.error(error_msg)
+        raise ApiError(error_msg)
 
-
-def get_access_token(job_id):
+async def get_access_token(job_id):
     """
     获取123云盘API访问令牌
     优先使用本地缓存，根据过期时间判断是否需要重新获取（提前一天清除缓存并返回最新token）
@@ -191,6 +173,7 @@ def get_access_token(job_id):
     if use_cache:
         try:
             current_time = datetime.now().replace(tzinfo=None)
+            # 使用同步文件操作，因为这是本地文件操作，性能影响小
             with open(cache_file, "r") as f:
                 cache = json.load(f)
             expire_time = datetime.fromisoformat(cache["expiredAt"]).replace(
@@ -206,7 +189,7 @@ def get_access_token(job_id):
             pass
     # 获取新token
     client_secret = config_manager.get("client_secret", job_id=job_id)
-    token_response = auth_access_token(client_id, client_secret)
+    token_response = await auth_access_token(client_id, client_secret)
     # 保存token到缓存文件
     try:
         with open(cache_file, "w") as f:
@@ -226,16 +209,18 @@ def get_access_token(job_id):
     return token_response["data"]["accessToken"]
 
 
-def heartbeat(job_id):
+# 继续修改cloud_api.py，将剩余函数改为异步实现
+
+async def heartbeat(job_id):
     """
-    心跳检测
+    心跳检测 - 异步实现
     :param job_id: 任务ID
     """
     try:
         heartbeat_url = "heartbeat_" + job_id
         heartbeat_cache = download_url_cache.get(heartbeat_url)
         if heartbeat_cache is None:
-            jsonData = http_123_request(
+            jsonData = await http_123_request(
                 job_id, path="/api/v2/file/list?parentFileId=0&limit=1"
             )
             download_url_cache[heartbeat_url] = {
@@ -245,6 +230,7 @@ def heartbeat(job_id):
             }
             if jsonData["code"] != 0:
                 # 抛出异常以便调用者处理
+                from fastapi import HTTPException
                 raise HTTPException(
                     status_code=jsonData["code"], detail=jsonData["message"]
                 )
@@ -253,10 +239,9 @@ def heartbeat(job_id):
             global_job_cache_tokens[job_id] = False
             logger.warning(f"{job_id} 心跳检测失败, 禁用缓存文件。error:{e}")
 
-
-def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, max_retries=0):
+async def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, max_retries=0):
     """
-    获取文件列表
+    获取文件列表 - 异步实现
     :param parent_file_id: 父文件夹ID，默认为0（根目录）
     :param limit: 返回的文件数量限制，默认为100
     :param access_token: 访问令牌，如果未提供则自动获取
@@ -264,21 +249,21 @@ def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, max_retr
     """
     try:
         start_time = time.time()
-        response = http_123_request(
+        response = await http_123_request(
             job_id,
             path=f"/api/v2/file/list?parentFileId={parent_file_id}&limit={limit}"
             + (f"&lastFileId={lastFileId}" if lastFileId else ""),
         )
         elapsed = time.time() - start_time
         if elapsed < 0.34:
-            time.sleep(0.34 - elapsed)
+            await asyncio.sleep(0.34 - elapsed)
         return response
     except:
         if max_retries < 3:
-            time.sleep(5)
+            await asyncio.sleep(5)
             max_retries = max_retries + 1
             logger.info(f"获取文件列表失败: {parent_file_id}, 重试{max_retries}...")
-            return get_file_list(
+            return await get_file_list(
                 job_id,
                 parent_file_id=parent_file_id,
                 limit=limit,
@@ -288,93 +273,86 @@ def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, max_retr
         else:
             raise Exception(f"获取文件列表失败: {parent_file_id}")
 
-
-def get_file_infos(job_id, file_ids):
+async def get_file_infos(job_id, file_ids):
     """
-    获取多个文件信息
+    获取多个文件信息 - 异步实现
     :param file_ids: 文件ID列表，逗号分隔
     :return: 文件信息JSON数据
     """
     try:
         payload = json.dumps({"fileIds": file_ids})
-        response = http_123_request(
+        response = await http_123_request(
             job_id, payload=payload, path=f"/api/v1/file/infos", method="POST"
         )
         return response
     except:
         raise Exception(f"获取文件信息失败: {file_ids}")
 
-
-def get_file_info(fileId, job_id, max_retries=0):
+async def get_file_info(fileId, job_id, max_retries=0):
     """
-    获取文件信息
+    获取文件信息 - 异步实现
     :param fileId: 文件ID
     :return: 文件信息JSON数据
     """
 
     try:
-        response = http_123_request(job_id, path=f"/api/v1/file/detail?fileID={fileId}")
+        response = await http_123_request(job_id, path=f"/api/v1/file/detail?fileID={fileId}")
         return response["data"]
     except:
         if max_retries < 3:
-            time.sleep(5)
+            await asyncio.sleep(5)
             max_retries = max_retries + 1
             logger.info(f"获取文件信息失败: {fileId}, 重试{max_retries}...")
-            return get_file_info(fileId, job_id, max_retries)
+            return await get_file_info(fileId, job_id, max_retries)
         else:
             raise Exception(f"获取文件信息失败: {fileId}")
 
-
-def get_file_download_info(file_id, job_id, max_retries=0):
+async def get_file_download_url(file_id, job_id, max_retries=0):
     """
-    获取文件下载信息
+    获取文件下载信息 - 异步实现
     :param file_id: 文件ID
     :param access_token: 访问令牌，如果未提供则自动获取
     :return: 下载信息JSON数据
     """
     try:
-        response = http_123_request(
+        response = await http_123_request(
             job_id, path=f"/api/v1/file/download_info?fileId={file_id}"
         )
         return response["data"]["downloadUrl"]
     except:
         if max_retries < 3:
-            time.sleep(5)
+            await asyncio.sleep(5)
             max_retries = max_retries + 1
             logger.info(f"获取文件下载信息失败: {file_id}, 重试{max_retries}...")
-            return get_file_download_info(file_id, job_id, max_retries)
+            return await get_file_download_url(file_id, job_id, max_retries)
         else:
             logger.info(f"获取文件下载信息失败: {file_id}")
 
-
-def delete_file_by_id(file_id, job_id):
+async def delete_file_by_id(file_id, job_id):
     """
-    删除文件
+    删除文件 - 异步实现
     :param file_id: 文件ID
     :param job_id: 任务ID
     :return: 删除结果JSON数据
     """
     # qps设置为1
-    time.sleep(1)
+    await asyncio.sleep(1)
     try:
         payload = json.dumps({"fileIDs": [file_id]})
-        response = http_123_request(
+        response = await http_123_request(
             job_id, payload=payload, path=f"/api/v1/file/trash", method="POST"
         )
         if response["code"] == 0:
             logger.info(f"删除云盘文件成功: {job_id} - {file_id}")
-    except:
-        logger.info(
-            f"删除云盘文件失败: {job_id} - {file_id} -{response["code"]}: {response["message"]}"
-        )
-
+    except Exception as e:
+        logger.info(f"删除云盘文件失败: {job_id} - {file_id} - 错误: {str(e)}")
 
 # 创建文件上传信息
-def upload_file_v2_create(
+async def upload_file_v2_create(
     parent_file_id, filename, etag, size, duplicate, contain_dir, job_id
 ):
     """
-    创建文件上传信息
+    创建文件上传信息 - 异步实现
     :param parent_file_id: 父文件夹ID
     :param filename: 文件名
     :param etag: 文件ETAG
@@ -395,7 +373,7 @@ def upload_file_v2_create(
                 "containDir": contain_dir,
             }
         )
-        response = http_123_request(
+        response = await http_123_request(
             job_id, payload=payload, path=f"/upload/v2/file/create", method="POST"
         )
         return response
@@ -409,11 +387,10 @@ def upload_file_v2_create(
             "data": {"reuse": False, "preuploadID": ""},
         }
 
-
-def upload_file_v2_slice(
+async def upload_file_v2_slice(
     file_name: str, slice_no: str, chunk: bytes, upload_id: str, url: str, job_id: str
 ):
-    """上传文件分片到123云盘
+    """上传文件分片到123云盘 - 异步实现
 
     Args:
         file_path: 文件路径
@@ -428,7 +405,7 @@ def upload_file_v2_slice(
     """
 
     # 获取访问令牌
-    access_token = get_access_token(job_id)
+    access_token = await get_access_token(job_id)
 
     # 计算分片MD5
     slice_md5 = calculate_chunk_md5(chunk)
@@ -442,49 +419,41 @@ def upload_file_v2_slice(
     # 记录请求信息用于调试
     logger.info(f"分片大小: {len(chunk)} bytes, MD5: {slice_md5}")
 
-    # 准备请求数据 - 尝试调整字段名以匹配服务器期望的格式
-    files = {"slice": (os.path.basename(file_name), chunk, "application/octet-stream")}
-    data = {
-        "preuploadID": upload_id,
-        "sliceNo": slice_no,
-        "sliceMD5": slice_md5,
-        "sliceSize": str(len(chunk)),
-    }
+    # 准备请求数据 - 使用FormData进行文件上传
+    data = aiohttp.FormData()
+    data.add_field('slice', chunk, filename=os.path.basename(file_name), content_type='application/octet-stream')
+    data.add_field('preuploadID', upload_id)
+    data.add_field('sliceNo', slice_no)
+    data.add_field('sliceMD5', slice_md5)
+    data.add_field('sliceSize', str(len(chunk)))
 
     # 发送请求，增加超时设置
     try:
-        response = requests.post(
-            url, headers=headers, files=files, data=data, timeout=30
-        )
-    except requests.exceptions.RequestException as e:
+        session = await session_manager.get_session()
+        async with session.post(url, headers=headers, data=data, timeout=30) as response:
+            # 错误处理：检查响应是否有效
+            response.raise_for_status()
+            # 尝试解析JSON响应
+            if await response.text():
+                return await response.json()
+            else:
+                # 响应内容为空
+                return {"code": 1, "message": "Empty response from server"}
+    except aiohttp.ClientError as e:
         logger.error(f"请求异常: {str(e)}")
         return {"code": 999, "message": f"Request failed: {str(e)}"}
-    # 错误处理：检查响应是否有效
-    try:
-        # 首先检查响应状态码
-        response.raise_for_status()
-        # 尝试解析JSON响应
-        if response.text.strip():
-            return response.json()
-        else:
-            # 响应内容为空
-            return {"code": 1, "message": "Empty response from server"}
-    except requests.exceptions.HTTPError as e:
-        # HTTP错误
-        return {"code": response.status_code, "message": f"HTTP Error: {str(e)}"}
-    except ValueError:
+    except json.JSONDecodeError:
         # JSON解析错误
         return {
             "code": 2,
-            "message": f"Invalid JSON response: {response.text[:100]}...",
+            "message": f"Invalid JSON response",
         }
 
-
 # 完整的分片上传流程
-def complete_multipart_upload(
+async def complete_multipart_upload(
     file_path: str, file_name: str, upload_info: dict, job_id: str
 ):
-    """执行完整的分片上传流程
+    """执行完整的分片上传流程 - 异步实现
 
     Args:
         file_path: 文件路径
@@ -495,6 +464,7 @@ def complete_multipart_upload(
     Returns:
         最终上传结果
     """
+
     # 参数验证和错误处理
     try:
         # 获取必要的上传信息

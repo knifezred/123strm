@@ -1,9 +1,8 @@
 import os
 import urllib.parse
-from typing import Dict
+import asyncio
 
-from .error_handler import handle_exception
-from .cloud_api import get_file_download_info
+from .cloud_api import get_file_download_url
 from .config_manager import config_manager
 from .utils import download_file
 from . import logger
@@ -21,7 +20,6 @@ class FileProcessor:
         self.path_prefix = config_manager.get("path_prefix", job_id=job_id)
         self.use_302_url = config_manager.get("use_302_url", job_id=job_id)
         self.flatten_mode = config_manager.get("flatten_mode", job_id=job_id)
-        self.min_file_size = int(config_manager.get("min_file_size", job_id=job_id))
         self.overwrite = config_manager.get("overwrite", job_id=job_id)
 
         # 媒体类型配置
@@ -34,7 +32,7 @@ class FileProcessor:
             "download_image_suffix", job_id=job_id
         )
 
-    def process_file(self, file_info: dict, parent_path: str):
+    async def process_file(self, file_info: dict, parent_path: str):
         """
         处理单个文件
 
@@ -56,11 +54,11 @@ class FileProcessor:
                 file_info, file_name, file_base_name, parent_path, target_path
             )
         elif file_extension in self.image_extensions:
-            result = self._process_image_file(file_info, file_base_name, target_path)
+            result = await self._process_image_file(file_info, file_base_name, target_path)
         elif file_extension in self.subtitle_extensions:
-            result = self._process_subtitle_file(file_info, target_path)
+            result = await self._process_subtitle_file(file_info, target_path)
         elif file_extension == ".nfo":
-            result = self._process_nfo_file(file_info, target_path)
+            result = await self._process_nfo_file(file_info, target_path)
         return result
 
     def _process_video_file(
@@ -74,9 +72,9 @@ class FileProcessor:
         """
         处理视频文件，生成strm文件
         """
-        # 只处理大于最小文件大小的文件
-        if int(file_info.get("size", 0)) <= self.min_file_size:
-            return
+        # 不再限制最小文件大小
+        # if int(file_info.get("size", 0)) <= self.min_file_size:
+        #     return
 
         # 生成视频URL
         if self.use_302_url:
@@ -100,23 +98,13 @@ class FileProcessor:
             try:
                 with open(strm_path, "w", encoding="utf-8") as f:
                     f.write(video_url)
-                logger.info(
-                    f"生成strm文件 job_id: self.{self.job_id},strm_path: {strm_path},file_id: {file_info["fileId"]}",
-                )
+                logger.info(f"生成成功: {strm_path}")
             except Exception as e:
-                handle_exception(
-                    e,
-                    "file",
-                    {
-                        "job_id": self.job_id,
-                        "file_path": strm_path,
-                        "file_id": file_info["fileId"],
-                    },
-                )
+                logger.error(f"生成strm文件失败: {strm_path}, 错误信息: {str(e)}")
 
         return strm_path
 
-    def _process_image_file(
+    async def _process_image_file(
         self, file_info: dict, file_base_name: str, target_path: str
     ):
         """
@@ -129,21 +117,22 @@ class FileProcessor:
                 isinstance(self.download_image_suffix, (list, tuple))
                 and file_base_name.endswith(tuple(self.download_image_suffix))
             ):
-                return self._download_file_with_log(target_path, file_info)
+                # 直接使用await调用异步方法
+                return await self._download_file_with_log(target_path, file_info)
 
-    def _process_subtitle_file(self, file_info: dict, target_path: str):
+    async def _process_subtitle_file(self, file_info: dict, target_path: str):
         """
         处理字幕文件
         """
         if self._is_filetype_downloadable("subtitle"):
-            return self._download_file_with_log(target_path, file_info)
+            return await self._download_file_with_log(target_path, file_info)
 
-    def _process_nfo_file(self, file_info: dict, target_path: str):
+    async def _process_nfo_file(self, file_info: dict, target_path: str):
         """
         处理nfo文件
         """
         if self._is_filetype_downloadable("nfo"):
-            return self._download_file_with_log(target_path, file_info)
+            return await self._download_file_with_log(target_path, file_info)
 
     def _is_filetype_downloadable(self, file_type: str) -> bool:
         """
@@ -157,7 +146,7 @@ class FileProcessor:
         """
         return config_manager.get(file_type, self.job_id) and not self.flatten_mode
 
-    def _download_file_with_log(self, target_path: str, file_info: dict):
+    async def _download_file_with_log(self, target_path: str, file_info: dict):
         """
         下载文件并打印日志
 
@@ -171,16 +160,12 @@ class FileProcessor:
         # 判断文件是否存在
         if not os.path.exists(target_file):
             try:
-                download_url = get_file_download_info(file_info["fileId"], self.job_id)
-                download_file(download_url, target_file)
-            except Exception as e:
-                handle_exception(
-                    e,
-                    "download",
-                    {
-                        "job_id": self.job_id,
-                        "file_path": target_file,
-                        "file_id": file_info["fileId"],
-                    },
+                # 使用异步方式获取下载URL
+                download_url = await get_file_download_url(
+                    file_info["fileId"], self.job_id
                 )
+                # 由于download_file函数是同步的，我们需要在单独的线程中执行
+                await asyncio.to_thread(download_file, download_url, target_file)
+            except Exception as e:
+                logger.error(f"下载文件失败: {target_file}, 错误信息: {str(e)}")
         return target_file
