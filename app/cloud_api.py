@@ -16,7 +16,7 @@ from .utils import (
     read_file_chunks,
 )
 
-from app import logger
+from . import logger
 
 
 # 创建全局aiohttp会话管理器
@@ -25,10 +25,11 @@ class AsyncSessionManager:
     异步请求会话管理器
     使用aiohttp的ClientSession管理HTTP连接
     """
+
     def __init__(self):
         self._lock = asyncio.Lock()
         self._sessions = {}
-        
+
     async def get_session(self, host=None):
         """
         获取或创建一个异步会话
@@ -37,7 +38,7 @@ class AsyncSessionManager:
         """
         if host is None:
             host = "https://open-api.123pan.com"
-            
+
         async with self._lock:
             if host not in self._sessions:
                 session = aiohttp.ClientSession()
@@ -45,13 +46,14 @@ class AsyncSessionManager:
                 # aiohttp的超时设置在请求时单独设置
                 self._sessions[host] = session
             return self._sessions[host]
-    
+
     async def close_all(self):
         """关闭所有会话"""
         async with self._lock:
             for session in self._sessions.values():
                 await session.close()
             self._sessions.clear()
+
 
 # 全局会话管理器实例
 session_manager = AsyncSessionManager()
@@ -68,11 +70,13 @@ config_folder = config_manager.get_config_folder()
 # 文件下载URL缓存 (存储格式: {file_id: {'url': url, 'expire_time': timestamp}})
 download_url_cache = {}
 
+
 async def clean_download_url_cache():
     """清理过期302链接缓存项"""
     for file_id, item in list(download_url_cache.items()):
         if time.time() > item["expire_time"]:
             del download_url_cache[file_id]
+
 
 async def http_123_request(job_id, payload="", path="", method="GET"):
     """
@@ -90,29 +94,35 @@ async def http_123_request(job_id, payload="", path="", method="GET"):
             "Platform": "open_platform",
             "Authorization": f"Bearer {access_token}",
         }
-        
+
         # 构建完整URL
         url = f"https://open-api.123pan.com{path}"
-        
+
         # 获取会话并发送请求
         session = await session_manager.get_session()
-        
+
         # 根据方法类型发送请求
         if method == "GET":
             params = json.loads(payload) if payload else None
-            async with session.get(url, headers=headers, params=params, timeout=30) as response:
+            async with session.get(
+                url, headers=headers, params=params, timeout=30
+            ) as response:
                 response.raise_for_status()
                 result = await response.json()
         elif method == "POST":
-            async with session.post(url, headers=headers, data=payload, timeout=30) as response:
+            async with session.post(
+                url, headers=headers, data=payload, timeout=30
+            ) as response:
                 response.raise_for_status()
                 result = await response.json()
         else:
             # 支持其他方法
-            async with session.request(method, url, headers=headers, data=payload, timeout=30) as response:
+            async with session.request(
+                method, url, headers=headers, data=payload, timeout=30
+            ) as response:
                 response.raise_for_status()
                 result = await response.json()
-        
+
         # 检查响应状态
         if result["code"] != 0:
             if result["code"] == 401:
@@ -121,9 +131,7 @@ async def http_123_request(job_id, payload="", path="", method="GET"):
                 # 操作频繁，暂停30秒
                 await asyncio.sleep(30)
             error_msg = f"API请求失败(job_id={job_id}): {result['message']}"
-            logger.error(
-                error_msg, {"job_id": job_id, "response_code": result["code"]}
-            )
+            logger.error(error_msg, {"job_id": job_id, "response_code": result["code"]})
             raise ApiError(
                 error_msg, error_code=result["code"], details={"job_id": job_id}
             )
@@ -137,6 +145,7 @@ async def http_123_request(job_id, payload="", path="", method="GET"):
         logger.error(error_msg, {"job_id": job_id})
         raise ApiError(error_msg, details={"job_id": job_id})
 
+
 async def auth_access_token(client_id, client_secret):
     """
     获取123云盘API访问令牌 - 使用aiohttp实现异步调用
@@ -148,15 +157,18 @@ async def auth_access_token(client_id, client_secret):
         url = "https://open-api.123pan.com/api/v1/access_token"
         payload = json.dumps({"client_id": client_id, "client_secret": client_secret})
         headers = {"Platform": "open_platform", "Content-Type": "application/json"}
-        
+
         session = await session_manager.get_session()
-        async with session.post(url, data=payload, headers=headers, timeout=30) as response:
+        async with session.post(
+            url, data=payload, headers=headers, timeout=30
+        ) as response:
             response.raise_for_status()
             return await response.json()
     except aiohttp.ClientError as e:
         error_msg = f"获取访问令牌失败: {str(e)}"
         logger.error(error_msg)
         raise ApiError(error_msg)
+
 
 async def get_access_token(job_id):
     """
@@ -211,6 +223,7 @@ async def get_access_token(job_id):
 
 # 继续修改cloud_api.py，将剩余函数改为异步实现
 
+
 async def heartbeat(job_id):
     """
     心跳检测 - 异步实现
@@ -231,6 +244,7 @@ async def heartbeat(job_id):
             if jsonData["code"] != 0:
                 # 抛出异常以便调用者处理
                 from fastapi import HTTPException
+
                 raise HTTPException(
                     status_code=jsonData["code"], detail=jsonData["message"]
                 )
@@ -239,7 +253,10 @@ async def heartbeat(job_id):
             global_job_cache_tokens[job_id] = False
             logger.warning(f"{job_id} 心跳检测失败, 禁用缓存文件。error:{e}")
 
-async def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, max_retries=0):
+
+async def get_file_list(
+    job_id, parent_file_id=0, limit=100, lastFileId=None, max_retries=0
+):
     """
     获取文件列表 - 异步实现
     :param parent_file_id: 父文件夹ID，默认为0（根目录）
@@ -273,6 +290,7 @@ async def get_file_list(job_id, parent_file_id=0, limit=100, lastFileId=None, ma
         else:
             raise Exception(f"获取文件列表失败: {parent_file_id}")
 
+
 async def get_file_infos(job_id, file_ids):
     """
     获取多个文件信息 - 异步实现
@@ -288,6 +306,7 @@ async def get_file_infos(job_id, file_ids):
     except:
         raise Exception(f"获取文件信息失败: {file_ids}")
 
+
 async def get_file_info(fileId, job_id, max_retries=0):
     """
     获取文件信息 - 异步实现
@@ -296,7 +315,9 @@ async def get_file_info(fileId, job_id, max_retries=0):
     """
 
     try:
-        response = await http_123_request(job_id, path=f"/api/v1/file/detail?fileID={fileId}")
+        response = await http_123_request(
+            job_id, path=f"/api/v1/file/detail?fileID={fileId}"
+        )
         return response["data"]
     except:
         if max_retries < 3:
@@ -306,6 +327,7 @@ async def get_file_info(fileId, job_id, max_retries=0):
             return await get_file_info(fileId, job_id, max_retries)
         else:
             raise Exception(f"获取文件信息失败: {fileId}")
+
 
 async def get_file_download_url(file_id, job_id, max_retries=0):
     """
@@ -328,6 +350,7 @@ async def get_file_download_url(file_id, job_id, max_retries=0):
         else:
             logger.info(f"获取文件下载信息失败: {file_id}")
 
+
 async def delete_file_by_id(file_id, job_id):
     """
     删除文件 - 异步实现
@@ -346,6 +369,7 @@ async def delete_file_by_id(file_id, job_id):
             logger.info(f"删除云盘文件成功: {job_id} - {file_id}")
     except Exception as e:
         logger.info(f"删除云盘文件失败: {job_id} - {file_id} - 错误: {str(e)}")
+
 
 # 创建文件上传信息
 async def upload_file_v2_create(
@@ -387,6 +411,7 @@ async def upload_file_v2_create(
             "data": {"reuse": False, "preuploadID": ""},
         }
 
+
 async def upload_file_v2_slice(
     file_name: str, slice_no: str, chunk: bytes, upload_id: str, url: str, job_id: str
 ):
@@ -421,16 +446,23 @@ async def upload_file_v2_slice(
 
     # 准备请求数据 - 使用FormData进行文件上传
     data = aiohttp.FormData()
-    data.add_field('slice', chunk, filename=os.path.basename(file_name), content_type='application/octet-stream')
-    data.add_field('preuploadID', upload_id)
-    data.add_field('sliceNo', slice_no)
-    data.add_field('sliceMD5', slice_md5)
-    data.add_field('sliceSize', str(len(chunk)))
+    data.add_field(
+        "slice",
+        chunk,
+        filename=os.path.basename(file_name),
+        content_type="application/octet-stream",
+    )
+    data.add_field("preuploadID", upload_id)
+    data.add_field("sliceNo", slice_no)
+    data.add_field("sliceMD5", slice_md5)
+    data.add_field("sliceSize", str(len(chunk)))
 
     # 发送请求，增加超时设置
     try:
         session = await session_manager.get_session()
-        async with session.post(url, headers=headers, data=data, timeout=30) as response:
+        async with session.post(
+            url, headers=headers, data=data, timeout=30
+        ) as response:
             # 错误处理：检查响应是否有效
             response.raise_for_status()
             # 尝试解析JSON响应
@@ -448,6 +480,7 @@ async def upload_file_v2_slice(
             "code": 2,
             "message": f"Invalid JSON response",
         }
+
 
 # 完整的分片上传流程
 async def complete_multipart_upload(
