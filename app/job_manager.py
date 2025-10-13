@@ -6,7 +6,7 @@ import asyncio
 
 from . import logger
 from .config_manager import config_manager
-from .utils import save_file_ids
+from .utils import async_save_file_ids
 from .strm_generator import StrmGenerator
 from .file_manager import file_manager
 
@@ -44,7 +44,7 @@ class JobManager:
 
             # 2. 保存文件ID映射
             cloud_files = strm_generator.get_cloud_files()
-            await asyncio.to_thread(save_file_ids, cloud_files, job_id)
+            await async_save_file_ids(cloud_files, job_id)
 
             # 3. 如果需要，清理本地文件
             if config_manager.get("clean_local", default=False):
@@ -76,7 +76,7 @@ class JobManager:
 
             for job_id in job_ids:
                 await self.run_job(job_id)
-                await asyncio.sleep(1)  # 避免API请求过于频繁
+                await asyncio.sleep(1)
 
             logger.info(f"所有定时任务执行完成")
         except Exception as e:

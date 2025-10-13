@@ -278,6 +278,4 @@ def display_config_overview() -> bool:
 try:
     config_manager = ConfigManager()
 except Exception as e:
-    # 简化的错误处理：如果初始化失败，退出程序
-    logger.critical(f"创建全局配置管理器失败，程序将退出: {str(e)}")
-    exit(1)
+    logger.critical(f"创建全局配置管理器失败: {str(e)}")

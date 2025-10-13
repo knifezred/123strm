@@ -5,7 +5,7 @@ import asyncio
 
 from .cloud_api import get_file_info, get_file_list, get_file_download_url
 from .config_manager import config_manager
-from .utils import download_file
+from .utils import async_file_exists, async_makedirs, async_download_file
 from . import logger
 
 
@@ -17,7 +17,7 @@ class StrmGenerator:
     def __init__(self, job_id: str):
         self.job_id = job_id
         self.cloud_files: Dict[str, str] = {}  # 键为文件路径，值为文件ID
-        
+
         # 一次性加载所有配置，避免频繁调用config_manager
         self.target_dir = config_manager.get("target_dir", job_id=job_id)
         self.path_prefix = config_manager.get("path_prefix", job_id=job_id)
@@ -37,16 +37,26 @@ class StrmGenerator:
             default=[".jpg", ".jpeg", ".png", ".webp"],
         )
         self.subtitle_extensions = config_manager.get(
-            "subtitle_extensions", job_id=job_id, default=[".srt", ".ass", ".sub"],
+            "subtitle_extensions",
+            job_id=job_id,
+            default=[".srt", ".ass", ".sub"],
         )
         self.download_image_suffix = config_manager.get(
-            "download_image_suffix", job_id=job_id, default=[],
+            "download_image_suffix",
+            job_id=job_id,
+            default=[],
         )
-        
+
         # 预计算可下载类型的配置
-        self.download_images = config_manager.get("image", job_id=job_id) and not self.flatten_mode
-        self.download_subtitles = config_manager.get("subtitle", job_id=job_id) and not self.flatten_mode
-        self.download_nfo = config_manager.get("nfo", job_id=job_id) and not self.flatten_mode
+        self.download_images = (
+            config_manager.get("image", job_id=job_id) and not self.flatten_mode
+        )
+        self.download_subtitles = (
+            config_manager.get("subtitle", job_id=job_id) and not self.flatten_mode
+        )
+        self.download_nfo = (
+            config_manager.get("nfo", job_id=job_id) and not self.flatten_mode
+        )
 
     async def traverse_folders(self, parent_id=None, parent_path=""):
         """
@@ -62,7 +72,7 @@ class StrmGenerator:
                 for pid in parent_id.split(","):
                     await self.traverse_folders(pid, parent_path)
                 return
-            
+
             # 构建基础路径
             if parent_path == "":
                 folder_info = await get_file_info(parent_id, self.job_id)
@@ -99,11 +109,11 @@ class StrmGenerator:
             return
 
         file_list_data = file_list["data"]["fileList"]
-        
+
         for item in file_list_data:
             item_type = item.get("type")
             filename = item.get("filename", "")
-            
+
             # 构建路径 - 简化逻辑
             if parent_path == "":
                 process_path = filename
@@ -111,13 +121,15 @@ class StrmGenerator:
                 process_path = os.path.join(parent_path, filename)
             else:
                 process_path = os.path.join(self.target_dir, parent_path, filename)
-            
+
             if item_type == 1:  # 文件夹
                 self.cloud_files[process_path] = item["fileId"]
                 await self.traverse_folders(item["fileId"], process_path)
             elif item_type == 0:  # 文件
                 # 直接处理文件并添加到cloud_files
-                file_path = await self._process_file(item, os.path.dirname(process_path))
+                file_path = await self._process_file(
+                    item, os.path.dirname(process_path)
+                )
                 self.cloud_files[file_path] = item["fileId"]
 
     async def _process_file(self, file_info: dict, parent_path: str):
@@ -127,17 +139,26 @@ class StrmGenerator:
         file_name = file_info.get("filename", "")
         file_base_name, file_extension = os.path.splitext(file_name)
         file_extension = file_extension.lower()
-        
+
         # 确定目标路径
-        target_path = parent_path if parent_path.startswith(self.target_dir) else os.path.join(self.target_dir, parent_path)
+        target_path = (
+            parent_path
+            if parent_path.startswith(self.target_dir)
+            else os.path.join(self.target_dir, parent_path)
+        )
 
         # 根据文件类型处理
         if file_extension in self.video_extensions:
             # 处理视频文件，生成strm文件
-            return self._process_video_file(file_info, file_name, file_base_name, parent_path, target_path)
+            return await self._process_video_file(
+                file_info, file_name, file_base_name, parent_path, target_path
+            )
         elif file_extension in self.image_extensions and self.download_images:
             # 处理图片文件
-            if not self.download_image_suffix or (isinstance(self.download_image_suffix, (list, tuple)) and file_base_name.endswith(tuple(self.download_image_suffix))):
+            if not self.download_image_suffix or (
+                isinstance(self.download_image_suffix, (list, tuple))
+                and file_base_name.endswith(tuple(self.download_image_suffix))
+            ):
                 return await self._download_file_with_log(target_path, file_info)
         elif file_extension in self.subtitle_extensions and self.download_subtitles:
             # 处理字幕文件
@@ -145,11 +166,18 @@ class StrmGenerator:
         elif file_extension == ".nfo" and self.download_nfo:
             # 处理nfo文件
             return await self._download_file_with_log(target_path, file_info)
-            
+
         # 默认返回文件路径
         return os.path.join(target_path, file_name)
 
-    def _process_video_file(self, file_info: dict, file_name: str, file_base_name: str, parent_path: str, target_path: str):
+    async def _process_video_file(
+        self,
+        file_info: dict,
+        file_name: str,
+        file_base_name: str,
+        parent_path: str,
+        target_path: str,
+    ):
         """
         处理视频文件，生成strm文件
         """
@@ -167,13 +195,17 @@ class StrmGenerator:
             strm_path = os.path.join(target_path, file_base_name + ".strm")
 
         # 确保目标目录存在
-        os.makedirs(os.path.dirname(strm_path), exist_ok=True)
+        await async_makedirs(os.path.dirname(strm_path))
 
         # 检查文件是否存在，文件不存在或者覆写为True时写入文件
-        if not os.path.exists(strm_path) or self.overwrite:
+        if not await async_file_exists(strm_path) or self.overwrite:
             try:
-                with open(strm_path, "w", encoding="utf-8") as f:
-                    f.write(video_url)
+                # 使用异步方式写入文件
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(
+                    None,
+                    lambda: open(strm_path, "w", encoding="utf-8").write(video_url),
+                )
                 logger.info(f"生成成功: {strm_path}")
             except Exception as e:
                 logger.error(f"生成strm文件失败: {strm_path}, 错误信息: {str(e)}")
@@ -188,13 +220,15 @@ class StrmGenerator:
         target_file = os.path.join(target_path, filename)
 
         # 判断文件是否存在
-        if not await asyncio.to_thread(os.path.exists, target_file):
+        if not await async_file_exists(target_file):
             # 确保目标目录存在
-            await asyncio.to_thread(os.makedirs, os.path.dirname(target_file), exist_ok=True)
+            await async_makedirs(os.path.dirname(target_file))
             try:
                 # 使用异步方式获取下载URL并下载文件
-                download_url = await get_file_download_url(file_info["fileId"], self.job_id)
-                await asyncio.to_thread(download_file, download_url, target_file)
+                download_url = await get_file_download_url(
+                    file_info["fileId"], self.job_id
+                )
+                await async_download_file(download_url, target_file)
                 logger.info(f"下载成功: {target_file}")
             except Exception as e:
                 logger.error(f"下载文件失败: {target_file}, 错误信息: {str(e)}")

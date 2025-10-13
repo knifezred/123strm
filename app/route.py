@@ -130,7 +130,6 @@ async def scrape_directory(query: dict):
     :param parent_path: 目标文件夹路径
     :return: 文件ID列表
     """
-    # 直接异步调用，因为job_manager.run_job已经改为异步实现
     result = await job_manager.run_job(
         query["dep_job_id"],
         query["parent_id"],

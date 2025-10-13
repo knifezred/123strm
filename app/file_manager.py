@@ -8,6 +8,7 @@ from watchdog.events import FileSystemEventHandler
 from . import logger
 from .config_manager import config_manager
 from .cloud_api import delete_file_by_id
+from .utils import async_file_exists, async_is_dir, async_listdir
 
 
 class FileManager:
@@ -76,8 +77,7 @@ class FileManager:
         """
         cloud_files = cloud_files or {}
         
-        dir_exists = await asyncio.to_thread(os.path.exists, local_dir)
-        if not dir_exists:
+        if not await async_file_exists(local_dir):
             logger.warning(f"清理目录不存在: {local_dir}")
             return
         
@@ -94,7 +94,7 @@ class FileManager:
             cloud_files: 云盘文件列表
         """
         # 检查是否是目录
-        is_dir = await asyncio.to_thread(os.path.isdir, path)
+        is_dir = await async_is_dir(path)
         if not is_dir:
             # 不是目录则检查是否需要删除
             if path not in cloud_files:
@@ -103,7 +103,7 @@ class FileManager:
         
         # 获取目录内容
         try:
-            entries = await asyncio.to_thread(os.listdir, path)
+            entries = await async_listdir(path)
         except OSError as e:
             logger.error(f"读取目录内容失败: {path}, 错误: {str(e)}")
             return
@@ -115,8 +115,9 @@ class FileManager:
         
         # 最后检查并删除空目录
         try:
-            if await asyncio.to_thread(self._is_directory_empty, path):
-                await asyncio.to_thread(os.rmdir, path)
+            loop = asyncio.get_running_loop()
+            if not await async_listdir(path):
+                await loop.run_in_executor(None, os.rmdir, path)
                 logger.info(f"已删除空目录: {path}")
         except OSError as e:
             logger.error(f"删除目录失败: {path}, 错误: {str(e)}")
@@ -129,7 +130,8 @@ class FileManager:
             file_path: 要删除的文件路径
         """
         try:
-            await asyncio.to_thread(os.remove, file_path)
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, os.remove, file_path)
             logger.info(f"已删除文件: {file_path}")
         except OSError as e:
             logger.error(f"删除文件失败: {file_path}, 错误: {str(e)}")

@@ -11,10 +11,7 @@ import aiohttp
 from datetime import datetime, timedelta
 
 from .config_manager import config_manager
-from .utils import (
-    calculate_chunk_md5,
-    read_file_chunks,
-)
+from .utils import calculate_chunk_md5, async_read_json, async_write_json, async_file_exists, async_remove_file, async_read_file_chunks
 
 from . import logger
 
@@ -63,9 +60,6 @@ global_job_cache_tokens = {}
 
 # 默认缓存状态
 default_use_cache_token = True
-
-# 配置文件夹
-config_folder = config_manager.get_config_folder()
 
 # 文件下载URL缓存 (存储格式: {file_id: {'url': url, 'expire_time': timestamp}})
 download_url_cache = {}
@@ -178,16 +172,17 @@ async def get_access_token(job_id):
     """
     client_id = config_manager.get("client_id", job_id=job_id)
     # 根据client_id生成缓存文件名
-    cache_file = os.path.join(config_folder, f"token_cache_{client_id}.json")
+    cache_file = os.path.join(
+        config_manager.get_config_folder(), f"token_cache_{client_id}.json"
+    )
     # 尝试从缓存文件读取token信息
     # 检查job_id是否在缓存设置中，不在则使用默认值
     use_cache = global_job_cache_tokens.get(job_id, default_use_cache_token)
     if use_cache:
         try:
             current_time = datetime.now().replace(tzinfo=None)
-            # 使用同步文件操作，因为这是本地文件操作，性能影响小
-            with open(cache_file, "r") as f:
-                cache = json.load(f)
+            # 使用异步文件操作
+            cache = await async_read_json(cache_file)
             expire_time = datetime.fromisoformat(cache["expiredAt"]).replace(
                 tzinfo=None
             )
@@ -195,8 +190,8 @@ async def get_access_token(job_id):
                 return cache["accessToken"]
             else:
                 # 提前1天清除缓存
-                if os.path.exists(cache_file):
-                    os.remove(cache_file)
+                if await async_file_exists(cache_file):
+                    await async_remove_file(cache_file)
         except (FileNotFoundError, json.JSONDecodeError, KeyError):
             pass
     # 获取新token
@@ -204,14 +199,13 @@ async def get_access_token(job_id):
     token_response = await auth_access_token(client_id, client_secret)
     # 保存token到缓存文件
     try:
-        with open(cache_file, "w") as f:
-            json.dump(
-                {
-                    "accessToken": token_response["data"]["accessToken"],
-                    "expiredAt": token_response["data"]["expiredAt"],
-                },
-                f,
-            )
+        await async_write_json(
+            cache_file,
+            {
+                "accessToken": token_response["data"]["accessToken"],
+                "expiredAt": token_response["data"]["expiredAt"],
+            },
+        )
     except IOError as e:
         logger.error(f"写入缓存文件 {cache_file} 失败: {str(e)}")
         # 文件操作失败时标记为不使用缓存，强制下次获取新token
@@ -521,14 +515,16 @@ async def complete_multipart_upload(
         upload_server = servers[0]
 
         # 读取文件分片并逐个上传
-        for i, chunk in enumerate(read_file_chunks(file_path, chunk_size=slice_size)):
-            slice_no = str(i + 1)  # 分片序号从1开始
+        i = 0
+        async for chunk in async_read_file_chunks(file_path, chunk_size=slice_size):
+            i += 1
+            slice_no = str(i)  # 分片序号从1开始
             url = f"{upload_server}/upload/v2/file/slice"
 
             # 记录上传前日志
             logger.info(f"开始上传分片 {slice_no}，大小: {len(chunk)/1000/1000} MB")
 
-            response = upload_file_v2_slice(
+            response = await upload_file_v2_slice(
                 file_name=file_name,
                 slice_no=slice_no,
                 chunk=chunk,
